@@ -1,9 +1,11 @@
 local Object = require("classic")
 
+local Position = require("src.Components.Position")
+
 local DrawSystem = Object:extend()
 
 function DrawSystem:draw(registry)
-    for entity, position in registry:query("position") do
+    for entity, position in registry:query(Position) do
         love.graphics.circle(
             "fill",
             position.x,
