@@ -10,7 +10,7 @@ function Scene:new(index)
 end
 
 function Scene:addSystem(system)
-    table.insert(self.systems, system)    
+    table.insert(self.systems, system)
 end
 
 function Scene:update(dt)

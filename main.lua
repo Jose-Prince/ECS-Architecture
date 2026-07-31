@@ -1,32 +1,22 @@
-local Scene = require("src.ECS.scene")
-
--- Systems
-local MovementSystem = require("src.Systems.MovementSystem")
-local DrawSystem = require("src.Systems.DrawSystem")
-
--- Components
-local Position = require("src.Components.Position")
-local Velocity = require("src.Components.Velocity")
-
-local scene
+local SceneManager = require("src.sceneManager")
+local TitleScreen = require("src.Scenes.titleScreen")
 
 function love.load()
-    scene = Scene(1)
-
-    scene:addSystem(MovementSystem())
-    scene:addSystem(DrawSystem())
-
-    scene.registry:createEntity({
-        [Position] = Position.new(100, 200),
-        [Velocity] = Velocity.new(120, 0)
-    })
+    SceneManager:setScene(TitleScreen())
 end
 
 function love.update(dt)
-    scene:update(dt)
+    SceneManager:update(dt)
 end
 
 function love.draw()
-    scene:draw()
+    SceneManager:draw()
 end
 
+function love.keypressed(key)
+    SceneManager:keypressed(key)
+end
+
+function love.mousepressed(x, y, button)
+    SceneManager:mousepressed(x, y, button)
+end
