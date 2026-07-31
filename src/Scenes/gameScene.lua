@@ -12,6 +12,7 @@ local MovementPaddleSystem = require("src.Systems.MovementPaddleSystem")
 local MovementBallSystem = require("src.Systems.MovementBallSystem")
 local DrawBallSystem = require("src.Systems.DrawBallSystem")
 local DrawPaddleSystem = require("src.Systems.DrawPaddleSystem")
+local WallCollisionSystem = require("src.Systems.WallCollisionSystem")
 
 local GameScene = Scene:extend()
 
@@ -22,6 +23,7 @@ function GameScene:new()
     self:addSystem(MovementBallSystem())
     self:addSystem(DrawBallSystem())
     self:addSystem(DrawPaddleSystem())
+    self:addSystem(WallCollisionSystem())
     
     -- Paddle
     self.registry:createEntity({
