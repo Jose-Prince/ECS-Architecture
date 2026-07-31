@@ -1,4 +1,5 @@
 local Object = require("classic")
+local unpack = table.unpack or unpack
 
 local Registry = Object.extend(Object)
 
@@ -53,11 +54,11 @@ function Registry:query(...)
         return function() return nil end
     end
 
-    local iterator = pairs(firstStorage)
+    local entity = nil
 
     return function()
         while true do
-            local entity, firstComponent = iterator()
+            entity, firstComponent = next(firstStorage, entity)
 
             if entity == nil then
                 return nil
@@ -78,7 +79,7 @@ function Registry:query(...)
             end
 
             if valid then
-                return entity, table.unpack(components)
+                return entity, unpack(components)
             end
         end
     end

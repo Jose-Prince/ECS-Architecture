@@ -1,5 +1,5 @@
 local Object = require("classic")
-local Registry = require("ECS.registry")
+local Registry = require("src.ECS.registry")
 
 local Scene = Object.extend(Object)
 
