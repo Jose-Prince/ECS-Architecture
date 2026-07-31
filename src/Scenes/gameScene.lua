@@ -8,6 +8,7 @@ local Radius = require("src.Components.Radius")
 local Paddle = require("src.Components.Paddle")
 
 -- Systems
+local MovementPaddleSystem = require("src.Systems.MovementPaddleSystem")
 local MovementBallSystem = require("src.Systems.MovementBallSystem")
 local DrawBallSystem = require("src.Systems.DrawBallSystem")
 local DrawPaddleSystem = require("src.Systems.DrawPaddleSystem")
@@ -17,6 +18,7 @@ local GameScene = Scene:extend()
 function GameScene:new()
     GameScene.super.new(self, 2)
 
+    self:addSystem(MovementPaddleSystem())
     self:addSystem(MovementBallSystem())
     self:addSystem(DrawBallSystem())
     self:addSystem(DrawPaddleSystem())
