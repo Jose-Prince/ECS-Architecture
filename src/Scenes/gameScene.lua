@@ -13,7 +13,8 @@ local MovementBallSystem = require("src.Systems.MovementBallSystem")
 local DrawBallSystem = require("src.Systems.DrawBallSystem")
 local DrawPaddleSystem = require("src.Systems.DrawPaddleSystem")
 local WallCollisionSystem = require("src.Systems.WallCollisionSystem")
-local ObjectCollisionSystem = require("src.Systems.ObjectCollisionSystem")
+local BrickCollisionSystem = require("src.Systems.BrickCollisionSystem")
+local PaddleCollisionSystem = require("src.Systems.PaddleCollisionSystem")
 
 local GameScene = Scene:extend()
 
@@ -28,21 +29,28 @@ function GameScene:new()
     self:addSystem(DrawBallSystem())
     self:addSystem(DrawPaddleSystem())
     self:addSystem(WallCollisionSystem())
-    self:addSystem(ObjectCollisionSystem())
+    self:addSystem(BrickCollisionSystem())
+    self:addSystem(PaddleCollisionSystem())
 
     -- Paddle
     self.registry:createEntity({
         [Position] = Position.new(width/2, height-height/12),
-        [Dimensions] = Dimensions.new(20, 20),
+        [Dimensions] = Dimensions.new(width/5, height/28),
         [Paddle] = Paddle.new(true),
         [Velocity] = Velocity.new(200, 0)
     })
 
     -- Ball
+    local speed = 150
+    local angle = math.rad(love.math.random(45, 135))
+
     self.registry:createEntity({
         [Position] = Position.new(width/2, height/2),
-        [Velocity] = Velocity.new(0, 150),
-        [Radius] = Radius.new(20)
+        [Velocity] = Velocity.new(
+            speed * math.cos(angle), 
+            speed * math.sin(angle)
+        ),
+        [Radius] = Radius.new(height/64)
     })
 end
 
