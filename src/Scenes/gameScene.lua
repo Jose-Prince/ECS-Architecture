@@ -17,6 +17,9 @@ local WallCollisionSystem = require("src.Systems.WallCollisionSystem")
 local GameScene = Scene:extend()
 
 function GameScene:new()
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+
     GameScene.super.new(self, 2)
 
     self:addSystem(MovementPaddleSystem())
@@ -24,10 +27,10 @@ function GameScene:new()
     self:addSystem(DrawBallSystem())
     self:addSystem(DrawPaddleSystem())
     self:addSystem(WallCollisionSystem())
-    
+
     -- Paddle
     self.registry:createEntity({
-        [Position] = Position.new(100, 200),
+        [Position] = Position.new(width/2, height-height/12),
         [Dimensions] = Dimensions.new(20, 20),
         [Paddle] = Paddle.new(true),
         [Velocity] = Velocity.new(200, 0)
@@ -35,8 +38,8 @@ function GameScene:new()
 
     -- Ball
     self.registry:createEntity({
-        [Position] = Position.new(100, 200),
-        [Velocity] = Velocity.new(120, 0),
+        [Position] = Position.new(width/2, height/2),
+        [Velocity] = Velocity.new(0, 150),
         [Radius] = Radius.new(20)
     })
 end
