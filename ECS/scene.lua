@@ -1,6 +1,7 @@
-Scene = Object.extend(Object)
-
+local Object = require("classic")
 local Registry = require("ECS.registry")
+
+local Scene = Object.extend(Object)
 
 function Scene:new(index)
     self.index = index
@@ -21,7 +22,7 @@ function Scene:update(dt)
 end
 
 function Scene:draw()
-    for _, system in ipairs(self.system) do
+    for _, system in ipairs(self.systems) do
         if system.draw then
             system:draw(self.registry)
         end

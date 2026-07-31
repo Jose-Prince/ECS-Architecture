@@ -1,12 +1,16 @@
+local Scene = require("ECS.scene")
+
+local scene
+
 function love.load()
-    -- Load
+    scene = Scene(1)
 end
 
 function love.update(dt)
-    -- Update
+    scene:update(dt)
 end
 
 function love.draw()
-    love.graphics.print("Hello World!", 100, 100)
+    scene:draw()
 end
 

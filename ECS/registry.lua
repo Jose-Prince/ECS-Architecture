@@ -1,18 +1,20 @@
-Registry = Object.extend(Object)
+local Object = require("classic")
 
-function Resgistry:new()
-    self.nextEntity = 1,
+local Registry = Object.extend(Object)
+
+function Registry:new()
+    self.nextEntity = 1
     self.components = {}
 end
 
 -- Adds entity to registry
-function Registry:createEntity()
+function Registry:createEntity(components)
     local entity = self.nextEntity
     self.nextEntity =self.nextEntity + 1
 
     if components then
         for componentType, component in pairs(components) do
-            self:addComponeny(entity, componentType, component)
+            self:addComponent(entity, componentType, component)
         end
     end
 
@@ -20,7 +22,7 @@ function Registry:createEntity()
 end
 
 function Registry:destroyEntity(entity)
-    for_, storage in pairs(self.components) do 
+    for _, storage in pairs(self.components) do 
         storage[entity] = nil
     end
 end
@@ -81,3 +83,5 @@ function Registry:query(...)
         end
     end
 end
+
+return Registry
