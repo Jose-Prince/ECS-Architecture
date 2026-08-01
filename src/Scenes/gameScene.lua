@@ -6,6 +6,8 @@ local Velocity = require("src.Components.Velocity")
 local Dimensions = require("src.Components.Dimensions")
 local Radius = require("src.Components.Radius")
 local Paddle = require("src.Components.Paddle")
+local Speed = require("src.Components.Speed")
+local Direction = require("src.Components.Direction")
 
 -- Systems
 local MovementPaddleSystem = require("src.Systems.MovementPaddleSystem")
@@ -41,15 +43,10 @@ function GameScene:new()
     })
 
     -- Ball
-    local speed = 150
-    local angle = math.rad(love.math.random(45, 135))
-
     self.registry:createEntity({
         [Position] = Position.new(width/2, height/2),
-        [Velocity] = Velocity.new(
-            speed * math.cos(angle), 
-            speed * math.sin(angle)
-        ),
+        [Direction] = Direction.new(0, -1),
+        [Speed] = Speed.new(150),
         [Radius] = Radius.new(height/64)
     })
 end

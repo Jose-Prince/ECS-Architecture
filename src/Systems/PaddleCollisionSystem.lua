@@ -2,7 +2,7 @@ local Object = require("classic")
 
 local Position = require("src.Components.Position")
 local Dimensions = require("src.Components.Dimensions")
-local Velocity = require("src.Components.Velocity")
+local Direction = require("src.Components.Direction")
 local Radius = require("src.Components.Radius")
 local Paddle = require("src.Components.Paddle")
 
@@ -16,7 +16,7 @@ end
 
 function PaddleCollisionSystem:update(registry, dt)
     for _, paddlePos, dimension in registry:query(Position, Dimensions, Paddle) do
-        for _, ballPos, radius, velocity in registry:query(Position, Radius, Velocity) do
+        for _, ballPos, radius, direction in registry:query(Position, Radius, Direction) do
             local closestX = clamp(
                 ballPos.x,
                 paddlePos.x,
@@ -32,21 +32,17 @@ function PaddleCollisionSystem:update(registry, dt)
             local dx = ballPos.x - closestX
             local dy = ballPos.y - closestY
 
-            if dx * dx + dy * dy <= radius and velocity.y > 0 then
+            if dx * dx + dy * dy <= radius and direction.y > 0 then
                 ballPos.y = paddlePos.y - radius
 
                 local center = paddlePos.x + dimension.width / 2
                 local hit = (ballPos.x - center) / (dimension.width / 2)
                 hit = clamp(hit, -1, 1)
 
-                local speed = math.sqrt(
-                    velocity.x * velocity.x + velocity.y + velocity.y
-                )
-
                 local angle = hit * MAX_BOUNCE_ANGLE
 
-                velocity.x = speed * math.sin(angle)
-                velocity.y = -speed * math.cos(angle)
+                direction.x = math.sin(angle)
+                direction.y = -math.cos(angle)
             end
         end
     end
