@@ -18,9 +18,6 @@ local TitleScreen = Scene:extend()
 local width = love.graphics.getWidth()
 local height = love.graphics.getHeight()
 
-local rows = 5
-local cols = 10
-
 function TitleScreen:new()
     TitleScreen.super.new(self, 1)
 

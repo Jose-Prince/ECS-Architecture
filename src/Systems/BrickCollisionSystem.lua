@@ -2,9 +2,9 @@ local Object = require("classic")
 
 local Position = require("src.Components.Position")
 local Dimensions = require("src.Components.Dimensions")
-local Velocity = require("src.Components.Velocity")
 local Radius = require("src.Components.Radius")
 local Brick = require("src.Components.Brick")
+local Direction = require("src.Components.Direction")
 
 local BrickCollisionSystem = Object:extend()
 
@@ -14,7 +14,7 @@ end
 
 function BrickCollisionSystem:update(registry, dt)
     for _, rectPos, dimension in registry:query(Position, Dimensions, Brick) do
-        for _, ballPos, radius, velocity in registry:query(Position, Radius, Velocity) do
+        for _, ballPos, radius, direction in registry:query(Position, Radius, Direction) do
             local closestX = clamp(
                 ballPos.x,
                 rectPos.x,
@@ -34,21 +34,9 @@ function BrickCollisionSystem:update(registry, dt)
 
             if distanceSquared <= radius * radius then
                 if math.abs(dx) > math.abs(dy) then
-                    if dx > 0 then
-                        ballPos.x = rectPos.x + dimension.width + radius
-                    else
-                        ballPos.x = rectPos.x - radius
-                    end
-
-                    velocity.x = -velocity.x
+                    direction.x = -direction.x
                 else
-                    if dy > 0 then
-                        ballPos.y = rectPos.y + dimension.height + radius
-                    else
-                        ballPos.y = rectPos.y - radius
-                    end
-
-                    velocity.y = -velocity.y
+                    direction.y = -direction.y
                 end
             end
         end
