@@ -9,6 +9,7 @@ local Paddle = require("src.Components.Paddle")
 local Speed = require("src.Components.Speed")
 local Direction = require("src.Components.Direction")
 local Brick = require("src.Components.Brick")
+local Collision = require("src.Components.Collision")
 
 -- Systems
 local MovementPaddleSystem = require("src.Systems.MovementPaddleSystem")
@@ -21,6 +22,7 @@ local PaddleCollisionSystem = require("src.Systems.PaddleCollisionSystem")
 local DrawBrickSystem = require("src.Systems.DrawBrickSystem")
 local DefeatSystem = require("src.Systems.DefeatSystem")
 local VictorySystem = require("src.Systems.VictorySystem")
+local IncreaseBallSpeedSystem = require("src.Systems.IncreaseBallSpeedSystem")
 
 local GameScene = Scene:extend()
 
@@ -50,6 +52,7 @@ function GameScene:new()
     self:addSystem(DrawBrickSystem())
     self:addSystem(DefeatSystem())
     self:addSystem(VictorySystem())
+    self:addSystem(IncreaseBallSpeedSystem())
 
     -- Paddle
     self.registry:createEntity({
@@ -64,7 +67,8 @@ function GameScene:new()
         [Position] = Position.new(width/2, height/2),
         [Direction] = Direction.new(0, 1),
         [Speed] = Speed.new(150),
-        [Radius] = Radius.new(height/64)
+        [Radius] = Radius.new(height/64),
+        [Collision] = Collision.new(false)
     })
 
     -- Blocks

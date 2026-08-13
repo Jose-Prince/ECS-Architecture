@@ -9,8 +9,8 @@ local MovementBallSystem = Object:extend()
 
 function MovementBallSystem:update(registry, dt)
     for _, position, speed, direction in registry:query(Position, Speed, Direction) do
-        position.x = position.x + direction.x * speed * dt
-        position.y = position.y + direction.y * speed * dt
+        position.x = position.x + direction.x * speed.value * dt
+        position.y = position.y + direction.y * speed.value * dt
     end
 end
 

@@ -5,6 +5,7 @@ local Dimensions = require("src.Components.Dimensions")
 local Radius = require("src.Components.Radius")
 local Brick = require("src.Components.Brick")
 local Direction = require("src.Components.Direction")
+local Collision = require("src.Components.Collision")
 
 local BrickCollisionSystem = Object:extend()
 
@@ -14,7 +15,7 @@ end
 
 function BrickCollisionSystem:update(registry, dt)
     for id, rectPos, dimension in registry:query(Position, Dimensions, Brick) do
-        for _, ballPos, radius, direction in registry:query(Position, Radius, Direction) do
+        for _, ballPos, radius, direction, collision in registry:query(Position, Radius, Direction, Collision) do
             local closestX = clamp(
                 ballPos.x,
                 rectPos.x,
@@ -39,6 +40,7 @@ function BrickCollisionSystem:update(registry, dt)
                     direction.y = -direction.y
                 end
 
+                collision.hasCollided = true
                 registry:destroyEntity(id)
             end
         end
