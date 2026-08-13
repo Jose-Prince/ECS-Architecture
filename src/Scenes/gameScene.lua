@@ -20,6 +20,7 @@ local BrickCollisionSystem = require("src.Systems.BrickCollisionSystem")
 local PaddleCollisionSystem = require("src.Systems.PaddleCollisionSystem")
 local DrawBrickSystem = require("src.Systems.DrawBrickSystem")
 local DefeatSystem = require("src.Systems.DefeatSystem")
+local VictorySystem = require("src.Systems.VictorySystem")
 
 local GameScene = Scene:extend()
 
@@ -48,6 +49,7 @@ function GameScene:new()
     self:addSystem(PaddleCollisionSystem())
     self:addSystem(DrawBrickSystem())
     self:addSystem(DefeatSystem())
+    self:addSystem(VictorySystem())
 
     -- Paddle
     self.registry:createEntity({
