@@ -13,7 +13,7 @@ local function clamp(value, min, max)
 end
 
 function BrickCollisionSystem:update(registry, dt)
-    for _, rectPos, dimension in registry:query(Position, Dimensions, Brick) do
+    for id, rectPos, dimension in registry:query(Position, Dimensions, Brick) do
         for _, ballPos, radius, direction in registry:query(Position, Radius, Direction) do
             local closestX = clamp(
                 ballPos.x,
@@ -38,6 +38,8 @@ function BrickCollisionSystem:update(registry, dt)
                 else
                     direction.y = -direction.y
                 end
+
+                registry:destroyEntity(id)
             end
         end
     end
