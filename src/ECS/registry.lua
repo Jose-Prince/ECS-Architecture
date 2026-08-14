@@ -1,4 +1,4 @@
-local Object = require("classic")
+local Object = require("lib.classic")
 local unpack = table.unpack or unpack
 
 local Registry = Object.extend(Object)

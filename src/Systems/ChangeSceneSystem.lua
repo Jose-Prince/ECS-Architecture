@@ -1,4 +1,4 @@
-local Object = require("classic")
+local Object = require("lib.classic")
 
 local SceneManager = require("src.sceneManager")
 local GameScene = require("src.Scenes.gameScene")
