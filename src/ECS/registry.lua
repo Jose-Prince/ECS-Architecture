@@ -4,12 +4,14 @@ local unpack = table.unpack or unpack
 local Registry = Object.extend(Object)
 
 function Registry:new()
+    self.entities = {}
     self.nextEntity = 1
     self.components = {}
 end
 
 -- Adds entity to registry
-function Registry:createEntity(components)
+function Registry:createEntity(name, components)
+    self.entities[self.nextEntity] = name
     local entity = self.nextEntity
     self.nextEntity =self.nextEntity + 1
 
@@ -23,6 +25,8 @@ function Registry:createEntity(components)
 end
 
 function Registry:destroyEntity(entity)
+    self.entities[entity] = nil
+
     for _, storage in pairs(self.components) do 
         storage[entity] = nil
     end

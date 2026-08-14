@@ -11,7 +11,11 @@ end
 function love.update(dt)
     SceneManager:update(dt)
 
-    Editor:update(dt)
+    if SceneManager.current then
+        Editor:update(dt, SceneManager.current.registry)
+    else
+        Editor:update(dt, nil)
+    end
 end
 
 function love.draw()

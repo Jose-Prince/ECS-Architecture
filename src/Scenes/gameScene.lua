@@ -16,7 +16,7 @@ function GameScene:new()
     self:addSystem(MovementSystem())
     self:addSystem(DrawSystem())
     
-    self.registry:createEntity({
+    self.registry:createEntity("ball", {
         [Position] = Position.new(100, 200),
         [Velocity] = Velocity.new(120, 0)
     })
