@@ -1,6 +1,6 @@
 local Object = require("lib.classic")
 
-local Position = require("src.Components.Position")
+local Position = require("src.Runtime.Components.Position")
 
 local DrawSystem = Object:extend()
 

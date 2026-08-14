@@ -1,6 +1,6 @@
-local Scene = require("src.ECS.scene")
+local Scene = require("src.ECS.Scene")
 
-local ChangeSceneSystem = require("src.Systems.ChangeSceneSystem")
+local ChangeSceneSystem = require("src.Runtime.Systems.ChangeSceneSystem")
 
 local TitleScreen = Scene:extend()
 

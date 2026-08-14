@@ -1,12 +1,12 @@
-local Scene = require("src.ECS.scene")
+local Scene = require("src.ECS.Scene")
 
 -- Components
-local Position = require("src.Components.Position")
-local Velocity = require("src.Components.Velocity")
+local Position = require("src.Runtime.Components.Position")
+local Velocity = require("src.Runtime.Components.Velocity")
 
 -- Systems
-local MovementSystem = require("src.Systems.MovementSystem")
-local DrawSystem = require("src.Systems.DrawSystem")
+local MovementSystem = require("src.Runtime.Systems.MovementSystem")
+local DrawSystem = require("src.Runtime.Systems.DrawSystem")
 
 local GameScene = Scene:extend()
 

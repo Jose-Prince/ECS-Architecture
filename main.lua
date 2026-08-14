@@ -1,34 +1,29 @@
-local SceneManager = require("src.sceneManager")
-local TitleScreen = require("src.Scenes.titleScreen")
-local Editor = require("src.Editor.Editor")
-local imlove = require("lib.imlove.imlove")
+local Game = require("src.Runtime.Game")
 
 function love.load()
-    SceneManager:setScene(TitleScreen())
-
-    Editor:load()
+    Game:load()
 end
 
 function love.update(dt)
-    imlove.NewFrame()
-
-    SceneManager:update(dt)
-
-    Editor:update(dt, SceneManager.current)
+    Game:update(dt)
 end
 
 function love.draw()
-    SceneManager:draw()
-
-    Editor:draw()
-
-    imlove.Render()
+    Game:draw()
 end
 
 function love.keypressed(key)
-    SceneManager:keypressed(key)
+    Game.keypressed(key)
+end
+
+function love.keyreleased(key)
+    Game.keyreleased(key)
 end
 
 function love.mousepressed(x, y, button)
-    SceneManager:mousepressed(x, y, button)
+    Game:mousepressed(x, y, button)
+end
+
+function love.mousereleased(x, y, button)
+    Game:mousereleased(x, y, buttonb)
 end

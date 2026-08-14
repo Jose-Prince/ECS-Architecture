@@ -1,7 +1,7 @@
 local Object = require("lib.classic")
 
-local SceneManager = require("src.sceneManager")
-local GameScene = require("src.Scenes.gameScene")
+local SceneManager = require("src.ECS.SceneManager")
+local GameScene = require("src.Runtime.Scenes.GameScene")
 
 local ChangeSceneSystem = Object:extend()
 
