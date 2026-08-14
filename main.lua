@@ -1,29 +1,44 @@
 local Game = require("src.Runtime.Game")
+local Editor = require("src.Editor.Editor")
+
+local editorMode = true
 
 function love.load()
-    Game:load()
+    if editorMode then
+        Editor:load()
+    else
+        Game:load()
+    end
 end
 
 function love.update(dt)
-    Game:update(dt)
+    if editorMode then
+        Editor:update(dt)
+    else
+        Game:update(dt)
+    end
 end
 
 function love.draw()
-    Game:draw()
+    if editorMode then
+        Editor:draw() 
+    else
+        Game:draw()
+    end
 end
 
 function love.keypressed(key)
-    Game.keypressed(key)
-end
-
-function love.keyreleased(key)
-    Game.keyreleased(key)
+    if editorMode then
+        Editor.keypressed()
+    else
+        Game.keypressed(key)
+    end
 end
 
 function love.mousepressed(x, y, button)
-    Game:mousepressed(x, y, button)
-end
-
-function love.mousereleased(x, y, button)
-    Game:mousereleased(x, y, buttonb)
+    if editorMode then
+        Editor.mousepressed(x, y, button)
+    else
+        Game:mousepressed(x, y, button)
+    end
 end
