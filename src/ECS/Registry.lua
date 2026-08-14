@@ -11,8 +11,8 @@ end
 
 -- Adds entity to registry
 function Registry:createEntity(name, components)
-    self.entities[self.nextEntity] = name
     local entity = self.nextEntity
+    self.entities[entity] = name or ("Entity" .. entity)
     self.nextEntity =self.nextEntity + 1
 
     if components then

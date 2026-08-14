@@ -1,3 +1,5 @@
+package.path = "./lib/?.lua;./lib/?/init.lua;" .. package.path
+
 local Game = require("src.Runtime.Game")
 local Editor = require("src.Editor.Editor")
 
