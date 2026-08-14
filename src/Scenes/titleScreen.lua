@@ -5,7 +5,7 @@ local ChangeSceneSystem = require("src.Systems.ChangeSceneSystem")
 local TitleScreen = Scene:extend()
 
 function TitleScreen:new()
-    TitleScreen.super.new(self, 1)
+    TitleScreen.super.new(self, 1, "Title Screen")
 
     self:addSystem(ChangeSceneSystem)
 end

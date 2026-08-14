@@ -3,8 +3,9 @@ local Registry = require("src.ECS.registry")
 
 local Scene = Object.extend(Object)
 
-function Scene:new(index)
+function Scene:new(index, name)
     self.index = index
+    self.name = name
     self.registry = Registry()
     self.systems = {}
 end

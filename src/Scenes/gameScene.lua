@@ -11,7 +11,7 @@ local DrawSystem = require("src.Systems.DrawSystem")
 local GameScene = Scene:extend()
 
 function GameScene:new()
-    GameScene.super.new(self, 2)
+    GameScene.super.new(self, 2, "Game Scene")
 
     self:addSystem(MovementSystem())
     self:addSystem(DrawSystem())

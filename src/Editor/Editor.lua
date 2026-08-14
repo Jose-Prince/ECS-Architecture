@@ -3,35 +3,39 @@ local imlove = require("lib.imlove.imlove")
 local Editor = {}
 
 Editor.registry = nil
+Editor.scene = nil
 
 function Editor:load()
 end
 
-function Editor:update(dt, registry)
-    self.registry = registry
-
-    imlove.NewFrame()
+function Editor:update(dt, scene)
+    self.scene = scene
+    self.registry = scene and scene.registry or nil
 end
 
 function Editor:draw()
-    if not self.registry then
+    if not self.scene then
         return
     end
 
-    imlove.Begin("Entities")
+    self:drawHeader()
+end
 
-    for entity = 1, self.registry.nextEntity - 1 do
-        local name = self.registry.entities[entity]
+function Editor:drawHeader()
+    local width = love.graphics.getWidth()
 
-        if name then
-            imlove.Text(entity .. " - " .. name)
-    
-        end
-    end
+    imlove.SetNextWindowPos(0, 0)
+    imlove.SetNextWindowSize(width, 50)
+
+    imlove.Begin("Scene Header", nil, {
+        "NoTitleBar",
+        "NoMove",
+        "NoResize"
+    })
+
+    imlove.Text(self.scene.name)
 
     imlove.End()
-
-    imlove.Render()
 end
-    
+
 return Editor
