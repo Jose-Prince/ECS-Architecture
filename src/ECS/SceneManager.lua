@@ -19,6 +19,10 @@ function SceneManager:processSceneChange()
     self.current = self.nextScene
     self.nextScene = nil
 
+    if self.current.load then
+        self.current:load()
+    end
+
     if self.current.enter then
         self.current:enter()
     end

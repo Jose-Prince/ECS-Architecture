@@ -14,6 +14,14 @@ function Scene:addSystem(system)
     table.insert(self.systems, system)
 end
 
+function Scene:load()
+    for _, system in ipairs(self.systems) do
+        if system.load then
+            system:load(self.registry)
+        end
+    end
+end
+
 function Scene:update(dt)
     for _, system in ipairs(self.systems) do
         if system.update then

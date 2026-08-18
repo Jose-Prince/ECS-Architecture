@@ -4,6 +4,10 @@ local Position = require("src.Runtime.Components.Position")
 
 local DrawSystem = Object:extend()
 
+function DrawSystem:load(registry)
+    self.name = "Draw"
+end
+
 function DrawSystem:draw(registry)
     for entity, position in registry:query(Position) do
         love.graphics.circle(

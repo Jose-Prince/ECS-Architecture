@@ -115,10 +115,10 @@ function Editor:update(dt, scene)
     if self.scene ~= scene then
         self.scene = scene
         self.registry = scene and scene.registry or nil
-        
-        -- Only refresh entities if we have a valid registry
+
         if self.registry then
             self:refreshEntities()
+            self:refreshSystems()
         end
     end
 
@@ -147,6 +147,7 @@ function Editor:mousereleased(x, y, button, istouch)
     luis.mousereleased(x, y, button, istouch)
 end
 
+-- Draw Entities of the scene
 function Editor:refreshEntities()
     if not self.registry then
         return
@@ -166,6 +167,29 @@ function Editor:refreshEntities()
         )
 
         self.entities:addChild(button)
+    end
+end
+
+-- Draw the systems of the scene
+function Editor:refreshSystems()
+    if not self.scene then
+        return
+    end
+
+    for id, system in ipairs(self.scene.systems) do
+        local button = luis.newButton(
+            system.name or "Unnamed System",
+            20,
+            3,
+            function ()
+                print("Selected system:", system.name)
+            end,
+            nil,
+            id,
+            1
+        )
+
+        self.systems:addChild(button)
     end
 end
 

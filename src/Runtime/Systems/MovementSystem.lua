@@ -5,6 +5,10 @@ local Velocity = require("src.Runtime.Components.Velocity")
 
 local MovementSystem = Object:extend()
 
+function MovementSystem:load(registry)
+    self.name = "Movement"
+end
+
 function MovementSystem:update(registry, dt)
     for _, position, velocity in registry:query(Position, Velocity) do
         position.x = position.x + velocity.x * dt
