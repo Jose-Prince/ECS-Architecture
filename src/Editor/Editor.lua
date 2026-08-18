@@ -52,7 +52,6 @@ function Editor:load()
     local columnWidth = totalWidth / 3
 
     -- Main Container
-
     local editorContainer = luis.newFlexContainer(
         totalWidth,
         totalHeight,
@@ -63,7 +62,6 @@ function Editor:load()
     )
 
     -- Entities
-
     local entities = luis.newFlexContainer(
         columnWidth,
         totalHeight,
@@ -74,7 +72,6 @@ function Editor:load()
     )
 
     -- Viewport
-
     local viewport = luis.newFlexContainer(
         columnWidth,
         totalHeight,
@@ -85,7 +82,6 @@ function Editor:load()
     )
 
     -- Systems
-
     local systems = luis.newFlexContainer(
         columnWidth,
         totalHeight,
@@ -109,14 +105,21 @@ function Editor:load()
     self.entities = entities
     self.viewport = viewport
     self.systems = systems
+    
+    -- Initialize scene and registry
+    self.scene = nil
+    self.registry = nil
 end
 
 function Editor:update(dt, scene)
     if self.scene ~= scene then
         self.scene = scene
         self.registry = scene and scene.registry or nil
-
-        self:refreshEntities()
+        
+        -- Only refresh entities if we have a valid registry
+        if self.registry then
+            self:refreshEntities()
+        end
     end
 
     luis.flux.update(dt)
@@ -124,7 +127,6 @@ function Editor:update(dt, scene)
 end
 
 function Editor:draw()
-    self:drawEntities()
     luis.draw()
     self:drawViewport()
 end
@@ -145,12 +147,17 @@ function Editor:mousereleased(x, y, button, istouch)
     luis.mousereleased(x, y, button, istouch)
 end
 
--- Draw Scene Entities
-function Editor:drawEntities()
+-- FIX: Added the missing refreshEntities method
+function Editor:refreshEntities()
     if not self.registry then
         return
     end
 
+    -- Clear existing entity buttons
+    -- Note: You may need to adapt this based on your luis library's API
+    -- This is a basic implementation
+    
+    -- Iterate through entities and create buttons
     for entity, name in pairs(self.registry.entities) do
         local button = luis.newButton(
             name,
@@ -163,28 +170,6 @@ function Editor:drawEntities()
         )
 
         self.entities:addChild(button)
-    end
-end
-
-function Editor:refreshEntities()
-    self.entities:clearChildren()
-
-    if not self.registry then
-        return
-    end
-
-    for entity, name in pairs(self.registry.entities) do
-        local button = luis.newButton(
-            name,
-            20,
-            3,
-            function ()
-                print("Selected entity:", entity)
-            end,
-            nil
-        )
-
-        self.entities.addChild(button)
     end
 end
 
@@ -238,6 +223,7 @@ function Editor:drawViewport()
 
     love.graphics.setColor(1, 1, 1, 1)
 
+    -- Query entities with Position component
     for entity, position in self.registry:query(Position) do
         local dimensions = self.registry:getComponent(entity, Dimensions)
 

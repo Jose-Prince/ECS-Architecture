@@ -1,5 +1,6 @@
 package.path = "./lib/?.lua;./lib/?/init.lua;" .. package.path
 
+local SceneManager = require("src.ECS.SceneManager")
 local Game = require("src.Runtime.Game")
 local Editor = require("src.Editor.Editor")
 
@@ -15,7 +16,7 @@ end
 
 function love.update(dt)
     if editorMode then
-        Editor:update(dt, Game.scene)
+        Editor:update(dt, SceneManager.current)
     else
         Game:update(dt)
     end
