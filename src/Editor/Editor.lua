@@ -152,19 +152,21 @@ function Editor:refreshEntities()
         return
     end
 
-    -- for entity, name in pairs(self.registry.entities) do
-    --     local button = luis.newButton(
-    --         name,
-    --         20,
-    --         3,
-    --         function ()
-    --             print("Selected entity:", entity)
-    --         end,
-    --         nil
-    --     )
+    for entity, name in pairs(self.registry.entities) do
+        local button = luis.newButton(
+            name,
+            20,
+            3,
+            function ()
+                print("Selected entity:", entity)
+            end,
+            nil,
+            entity,
+            1
+        )
 
-    --     self.entities:addChild(button)
-    -- end
+        self.entities:addChild(button)
+    end
 end
 
 -- Draw Scene preview
@@ -217,7 +219,6 @@ function Editor:drawViewport()
 
     love.graphics.setColor(1, 1, 1, 1)
 
-    -- Query entities with Position component
     for entity, position in self.registry:query(Position) do
         local dimensions = self.registry:getComponent(entity, Dimensions)
 
