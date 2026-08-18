@@ -7,10 +7,11 @@ local Editor = require("src.Editor.Editor")
 local editorMode = true
 
 function love.load()
+    Game:load()
+    SceneManager:processSceneChange()
+
     if editorMode then
         Editor:load()
-    else
-        Game:load()
     end
 end
 

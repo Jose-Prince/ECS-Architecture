@@ -147,30 +147,24 @@ function Editor:mousereleased(x, y, button, istouch)
     luis.mousereleased(x, y, button, istouch)
 end
 
--- FIX: Added the missing refreshEntities method
 function Editor:refreshEntities()
     if not self.registry then
         return
     end
 
-    -- Clear existing entity buttons
-    -- Note: You may need to adapt this based on your luis library's API
-    -- This is a basic implementation
-    
-    -- Iterate through entities and create buttons
-    for entity, name in pairs(self.registry.entities) do
-        local button = luis.newButton(
-            name,
-            20,
-            3,
-            function ()
-                print("Selected entity:", entity)
-            end,
-            nil
-        )
+    -- for entity, name in pairs(self.registry.entities) do
+    --     local button = luis.newButton(
+    --         name,
+    --         20,
+    --         3,
+    --         function ()
+    --             print("Selected entity:", entity)
+    --         end,
+    --         nil
+    --     )
 
-        self.entities:addChild(button)
-    end
+    --     self.entities:addChild(button)
+    -- end
 end
 
 -- Draw Scene preview
