@@ -41,6 +41,16 @@ function Registry:addComponent(entity, componentType, component)
     self.components[componentType][entity] = component
 end
 
+function Registry:getComponent(entity, componentType)
+    local storage = self.components[componentType]
+
+    if not storage then
+        return nil
+    end
+
+    return storage[entity]
+end
+
 function Registry:removeComponent(entity, componentType)
     local storage = self.components[componentType]
 

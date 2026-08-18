@@ -15,7 +15,7 @@ end
 
 function love.update(dt)
     if editorMode then
-        Editor:update(dt)
+        Editor:update(dt, Game.scene)
     else
         Game:update(dt)
     end
@@ -31,7 +31,7 @@ end
 
 function love.keypressed(key)
     if editorMode then
-        Editor.keypressed()
+        Editor.keypressed(key)
     else
         Game.keypressed(key)
     end

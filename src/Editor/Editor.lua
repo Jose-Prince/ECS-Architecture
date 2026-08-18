@@ -1,6 +1,9 @@
 local initLuis = require("lib.luis.init")
 local luis = initLuis("lib/luis/widgets")
 
+local Position = require("src.Runtime.Components.Position")
+local Dimensions = require("src.Runtime.Components.Dimensions")
+
 luis.flux = require("lib.luis.3rdparty.flux")
 
 local Editor = {}
@@ -48,9 +51,7 @@ function Editor:load()
 
     local columnWidth = totalWidth / 3
 
-    -- ==========================================
-    -- Contenedor principal
-    -- ==========================================
+    -- Main Container
 
     local editorContainer = luis.newFlexContainer(
         totalWidth,
@@ -61,9 +62,7 @@ function Editor:load()
         "Editor"
     )
 
-    -- ==========================================
     -- Entities
-    -- ==========================================
 
     local entities = luis.newFlexContainer(
         columnWidth,
@@ -74,9 +73,7 @@ function Editor:load()
         "Entities"
     )
 
-    -- ==========================================
     -- Viewport
-    -- ==========================================
 
     local viewport = luis.newFlexContainer(
         columnWidth,
@@ -87,9 +84,7 @@ function Editor:load()
         "Viewport"
     )
 
-    -- ==========================================
     -- Systems
-    -- ==========================================
 
     local systems = luis.newFlexContainer(
         columnWidth,
@@ -100,17 +95,9 @@ function Editor:load()
         "Systems"
     )
 
-    -- ==========================================
-    -- Agregar columnas al padre
-    -- ==========================================
-
     editorContainer:addChild(entities)
     editorContainer:addChild(viewport)
     editorContainer:addChild(systems)
-
-    -- ==========================================
-    -- Registrar solamente el padre
-    -- ==========================================
 
     luis.createElement(
         luis.currentLayer,
@@ -125,15 +112,21 @@ function Editor:load()
 end
 
 function Editor:update(dt, scene)
-    self.scene = scene
-    self.registry = scene and scene.registry or nil
+    if self.scene ~= scene then
+        self.scene = scene
+        self.registry = scene and scene.registry or nil
+
+        self:refreshEntities()
+    end
 
     luis.flux.update(dt)
     luis.update(dt)
 end
 
 function Editor:draw()
+    self:drawEntities()
     luis.draw()
+    self:drawViewport()
 end
 
 function Editor:keypressed(key)
@@ -152,6 +145,7 @@ function Editor:mousereleased(x, y, button, istouch)
     luis.mousereleased(x, y, button, istouch)
 end
 
+-- Draw Scene Entities
 function Editor:drawEntities()
     if not self.registry then
         return
@@ -170,6 +164,104 @@ function Editor:drawEntities()
 
         self.entities:addChild(button)
     end
+end
+
+function Editor:refreshEntities()
+    self.entities:clearChildren()
+
+    if not self.registry then
+        return
+    end
+
+    for entity, name in pairs(self.registry.entities) do
+        local button = luis.newButton(
+            name,
+            20,
+            3,
+            function ()
+                print("Selected entity:", entity)
+            end,
+            nil
+        )
+
+        self.entities.addChild(button)
+    end
+end
+
+-- Draw Scene preview
+function Editor:drawViewport()
+    if not self.registry then
+        return
+    end
+
+    local viewport = self.viewport
+
+    local sceneWidth = love.graphics.getWidth()
+    local sceneHeight = love.graphics.getHeight()
+
+    local scaleX = viewport.width / sceneWidth
+    local scaleY = viewport.height / sceneHeight
+
+    local scale = math.min(scaleX, scaleY)
+
+    local previewWidth = sceneWidth * scale
+    local previewHeight = sceneHeight * scale
+
+    local offsetX = (viewport.width - previewWidth) / 2
+    local offsetY = (viewport.height - previewHeight) / 2
+
+    love.graphics.setScissor(
+        viewport.position.x,
+        viewport.position.y,
+        viewport.width,
+        viewport.height
+    )
+
+    love.graphics.push()
+
+    love.graphics.translate(
+        viewport.position.x + offsetX,
+        viewport.position.y + offsetY
+    )
+
+    love.graphics.scale(scale, scale)
+
+    love.graphics.setColor(0, 0, 0, 1)
+
+    love.graphics.rectangle(
+        "fill",
+        0,
+        0,
+        sceneWidth,
+        sceneHeight
+    )
+
+    love.graphics.setColor(1, 1, 1, 1)
+
+    for entity, position in self.registry:query(Position) do
+        local dimensions = self.registry:getComponent(entity, Dimensions)
+
+        if dimensions then
+            love.graphics.rectangle(
+                "fill",
+                position.x,
+                position.y,
+                dimensions.width,
+                dimensions.height
+            )
+        else
+            love.graphics.circle(
+                "fill",
+                position.x,
+                position.y,
+                5
+            )
+        end
+    end
+
+    love.graphics.pop()
+
+    love.graphics.setScissor()
 end
 
 return Editor
