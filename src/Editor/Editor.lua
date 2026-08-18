@@ -61,6 +61,9 @@ function Editor:load()
         "Editor"
     )
 
+    editorContainer.movable = false
+    editorContainer.resizable = false
+
     -- Entities
     local entities = luis.newFlexContainer(
         columnWidth,
@@ -70,6 +73,9 @@ function Editor:load()
         entitiesTheme,
         "Entities"
     )
+
+    entities.movable = false
+    entities.resizable = false
 
     -- Viewport
     local viewport = luis.newFlexContainer(
@@ -81,6 +87,9 @@ function Editor:load()
         "Viewport"
     )
 
+    viewport.movable = false
+    viewport.resizable = false
+
     -- Systems
     local systems = luis.newFlexContainer(
         columnWidth,
@@ -90,6 +99,9 @@ function Editor:load()
         systemsTheme,
         "Systems"
     )
+
+    systems.movable = false
+    systems.resizable = false
 
     editorContainer:addChild(entities)
     editorContainer:addChild(viewport)
