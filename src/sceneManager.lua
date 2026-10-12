@@ -39,13 +39,13 @@ function SceneManager:draw()
 end
 
 function SceneManager:keypressed(...)
-    if self.current and self.current.keyPressed then
+    if self.current and self.current.keypressed then
         self.current:keypressed(...)
     end
 end
 
 function SceneManager:keyreleased(...)
-    if self.current and self.current.keyReleased then
+    if self.current and self.current.keyreleased then
         self.current:keyreleased(...)
     end
 end
