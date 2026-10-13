@@ -7,6 +7,7 @@ function Registry:new()
     self.entities = {}
     self.nextEntity = 1
     self.components = {}
+    self.componentTypes = {}
 end
 
 -- Adds entity to registry
@@ -35,6 +36,12 @@ end
 -- Adds component to an entity
 function Registry:addComponent(entity, componentType, component)
     if not self.components[componentType] then
+        self.components[componentType] = {}
+    end
+
+    self:registerComponentType(componentType)
+
+    if self.components[componentType] == nil then
         self.components[componentType] = {}
     end
 
@@ -87,6 +94,17 @@ function Registry:query(...)
             end
         end
     end
+end
+
+function Registry:registerComponentType(componentType, name)
+    if self.componentTypes[componentType] ~= nil then
+        return
+    end
+
+    self.componentTypes[componentType] = {
+        type = componentType,
+        name = name or componentType.__name or "Unknown Component"
+    }
 end
 
 return Registry
