@@ -19,12 +19,7 @@ function love.update(dt)
 end
 
 function love.draw()
-    SceneManager:draw()
-
     Editor:draw()
-
-    ECSDebugger:draw(SceneManager.current)
-
     imlove.Render()
 end
 

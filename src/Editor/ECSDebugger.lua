@@ -209,7 +209,7 @@ local function drawEntityList(registry)
 
     table.sort(entityIDs)
 
-    if imlove.BeginChild("EntityList", 220, 0, true) then
+    if imlove.BeginChild("EntityList", 150, 0, true) then
         for _, entity in ipairs(entityIDs) do
             local label = string.format(
                 "%s (ID: %d)",
@@ -362,15 +362,11 @@ end
 local function drawEntities(registry)
     registerKnownComponents(registry)
 
-    if imlove.BeginChild("EntityColumns", 0, 0, false) then
-        drawEntityList(registry)
+    drawEntityList(registry)
 
-        imlove.SameLine()
+    imlove.SameLine()
 
-        drawEntityInspector(registry)
-    end
-
-    imlove.EndChild()
+    drawEntityInspector(registry)
 end
 
 -- =========================================================
@@ -435,17 +431,31 @@ function ECSDebugger:draw(scene)
         return
     end
 
+    local screenWidth = love.graphics.getWidth()
+    local screenHeight = love.graphics.getHeight()
+
+    local debuggerWidth = 350
+    local debuggerHeight = screenHeight - 135
+
+    imlove.SetNextWindowPos(
+        screenWidth - debuggerWidth,
+        135
+    )
+
+    imlove.SetNextWindowSize(
+        debuggerWidth,
+        debuggerHeight
+    )
+
     local expanded, open = imlove.Begin(
         "ECS Debugger",
-        self.visible
+        self.visible,
+        {"NoCollapse"}
     )
 
     self.visible = open
 
     if expanded then
-        imlove.Text("Active scene: %s", tostring(scene.name))
-        imlove.Separator()
-
         for index, tab in ipairs(TABS) do
             if index > 1 then
                 imlove.SameLine()
