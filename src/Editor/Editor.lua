@@ -17,7 +17,6 @@ Editor.viewportWidth = 0
 Editor.viewportHeight = 0
 
 local VIEWPORT_Y = 135
-local DEBUGGER_WIDTH = 350
 local PANEL_SPACING = 4
 
 local BUTTON_WIDTH = 90
@@ -206,7 +205,7 @@ end
 
 function Editor:updateSceneCanvas()
     local screenWidth = love.graphics.getWidth()
-    local screenHeight = love.graphics.getHeight() - VIEWPORT_Y
+    local screenHeight = love.graphics.getHeight()
 
     local debuggerWidth = self.debuggerVisible and DEBUGGER_WIDTH or 0
 
@@ -240,5 +239,31 @@ function Editor:updateSceneCanvas()
 
     love.graphics.pop()
 end
+
+
+function Editor:mousepressed(x, y, button)
+    if not self.scene then
+        return
+    end
+
+    -- Convert screen coordinates into scene canvas coordinates.
+    local sceneX = x
+    local sceneY = y - VIEWPORT_Y
+
+    -- Ignore clicks outside the scene viewport.
+    if sceneX < 0 or sceneX > self.viewportWidth then
+        return
+    end
+
+    if sceneY < 0 or sceneY > self.viewportHeight then
+        return
+    end
+
+    -- Forward the converted coordinates to the scene.
+    if self.scene.mousepressed then
+        self.scene:mousepressed(sceneX, sceneY, button)
+    end
+end
+
 
 return Editor
