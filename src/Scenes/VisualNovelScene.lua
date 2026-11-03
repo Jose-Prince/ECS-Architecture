@@ -5,6 +5,11 @@ local DialogueBox = require("src.Components.DialogueBox")
 local DialogueRenderSystem = require("src.Systems.DialogueRenderSystem")
 local DialogueInputSystem = require("src.Systems.DialogueInputSystem")
 
+local Card = require("src.Components.Card")
+local CardPanel = require("src.Components.CardPanel")
+
+local CardRenderSystem = require("src.Systems.CardRenderSystem")
+
 local VisualNovelScene = Scene:extend()
 
 function VisualNovelScene:new()
@@ -13,6 +18,67 @@ function VisualNovelScene:new()
     self.dialogueInput = DialogueInputSystem()
 
     self:addSystem(DialogueRenderSystem())
+    self:addSystem(DialogueRenderSystem())
+    self:addSystem(CardRenderSystem())
+
+    local panelEntity = self.registry:createEntity(
+        "Card Panel",
+        {
+            [CardPanel] = CardPanel.new(
+                64,
+                575,
+                1152,
+                95
+            )
+        }
+    )
+
+    local cards = {
+        {
+            name = "Alice",
+            icon = "Assets/Icons/alice.png"
+        },
+        {
+            name = "Victoria",
+            icon = "Assets/Icons/victoria.png"
+        },
+        {
+            name = "School",
+            icon = "Assets/Icons/school.png"
+        },
+        {
+            name = "Library",
+            icon = "Assets/Icons/library.png"
+        },
+        {
+            name = "Friendship",
+            icon = "Assets/Icons/friendship.png"
+        },
+        {
+            name = "Love",
+            icon = "Assets/Icons/love.png"
+        }
+    }
+
+    local panel = nil
+
+    for entity, component in self.registry:query(CardPanel) do
+        if entity == panelEntity then
+            panel = component
+            break
+        end
+    end
+
+    for _, data in ipairs(cards) do
+        self.registry:createEntity(
+            "Card: " .. data.name,
+            {
+                [Card] = Card.new(data.name, data.icon)
+            }
+        )
+
+        panel.cardCount = panel.cardCount + 1
+    end
 
     local dialogues = {
         {
@@ -77,6 +143,31 @@ end
 function VisualNovelScene:mousepressed(x, y, button)
     if button == 1 then
         self.dialogueInput:advance(self.registry)
+    end
+end
+
+function VisualNovelScene:wheelmoved(x, y)
+
+    for entity, panel in self.registry:query(CardPanel) do
+
+        local scrollAmount = x ~= 0 and x or y
+
+        local contentWidth =
+            panel.cardCount * (panel.cardWidth + panel.gap)
+            - panel.gap
+
+        local maxScroll = math.max(
+            0,
+            contentWidth - panel.width
+        )
+
+        panel.scrollX = math.max(
+            0,
+            math.min(
+                maxScroll,
+                panel.scrollX - scrollAmount * 40
+            )
+        )
     end
 end
 
