@@ -19,10 +19,10 @@ local VisualNovelScene = Scene:extend()
 
 local CHARACTERS = {
     ["Alice"] = {
-        portrait = "Assets/Chracters/Alice/neutral.jpg"
+        portrait = "Assets/Characters/Alice/neutral.jpg"
     },
     ["Victoria"] = {
-        portrait = "Assets/Chracters/Victoria/neutral.jpg"
+        portrait = "Assets/Characters/Victoria/neutral.jpg"
     }
 }
 

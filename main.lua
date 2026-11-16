@@ -45,7 +45,7 @@ function love.mousepressed(x, y, button)
         return
     end
 
-    SceneManager:mousepressed(x, y, button)
+    Editor:mousepressed(x, y, button)
 end
 
 function love.mousereleased(x, y, button)
@@ -58,6 +58,7 @@ end
 
 function love.wheelmoved(dx, dy)
     imlove.wheelmoved(dx, dy)
+    SceneManager:wheelmoved(dx, dy)
 end
 
 function love.textinput(text)

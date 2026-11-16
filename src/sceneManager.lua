@@ -103,4 +103,10 @@ function SceneManager:getUpdateCount()
     return self.updateCount
 end
 
+function SceneManager:wheelmoved(...)
+    if self.current and self.current.wheelmoved then
+        self.current:wheelmoved(...)
+    end
+end
+
 return SceneManager
