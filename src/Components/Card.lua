@@ -3,7 +3,7 @@ local Card = {}
 Card.__index = Card
 Card.__name = "Card"
 
-function Card.new(name, iconPath, width, height, specialDialogue)
+function Card.new(name, iconPath, width, height, dialogueId)
     local icon = nil
 
     if iconPath then
@@ -12,6 +12,8 @@ function Card.new(name, iconPath, width, height, specialDialogue)
         if success then
             image:setFilter("linear", "linear")
             icon = image
+        else
+            print("Couldn't load icon:", iconPath, image)
         end
     end
 
@@ -24,7 +26,7 @@ function Card.new(name, iconPath, width, height, specialDialogue)
 
         iconSize = 48,
 
-        specialDialogue = specialDialogue or {},
+        dialogueId = dialogueId or "",
         enabled = true
     }, Card)
 end

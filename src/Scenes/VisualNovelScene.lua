@@ -1,8 +1,11 @@
-
 local Scene = require("src.ECS.scene")
 
-local DialogueBox = require("src.Components.DialogueBox")
+local DialogueLibrary = require("src.Dialogue.DialogueLibrary")
 
+local DialogueBox = require("src.Components.DialogueBox")
+local DialogueState = require("src.Components.DialogueState")
+
+local DialogueSystem = require("src.Systems.DialogueSystem")
 local DialogueRenderSystem = require("src.Systems.DialogueRenderSystem")
 local DialogueInputSystem = require("src.Systems.DialogueInputSystem")
 
@@ -13,9 +16,13 @@ local CardRenderSystem = require("src.Systems.CardRenderSystem")
 local CardInputSystem = require("src.Systems.CardInputSystem")
 
 local CharacterPortrait = require("src.Components.CharacterPortrait")
+local PortraitSyncSystem = require("src.Systems.PortraitSyncSystem")
 local PortraitRenderSystem = require("src.Systems.PortraitRenderSystem")
 
 local VisualNovelScene = Scene:extend()
+
+local DIALOGUES_PATH = "Assets/Dialogues/dialogues.csv"
+local STORY_CONVERSATION = "intro"
 
 local CHARACTERS = {
     ["Alice"] = {
@@ -26,24 +33,35 @@ local CHARACTERS = {
     }
 }
 
+-- name, icon. The card's dialogue is the CSV conversation "card_<name>".
+local CARDS = {
+    { name = "Alice",      icon = "Assets/Icons/alice.png" },
+    { name = "Victoria",   icon = "Assets/Icons/victoria.png" },
+    { name = "School",     icon = "Assets/Icons/school.png" },
+    { name = "Library",    icon = "Assets/Icons/library.png" },
+    { name = "Friendship", icon = "Assets/Icons/friendship.png" },
+    { name = "Love",       icon = "Assets/Icons/love.png" }
+}
+
 function VisualNovelScene:new()
     VisualNovelScene.super.new(self, 3, "Visual Novel")
 
-    self.dialogueMode = "story"
-    self.specialDialogueIndex = 1
-    self.previousDialogue = nil
-    self.specialDialogue = nil
+    -- Dialogues come from the CSV file.
+    self.library = DialogueLibrary.load(DIALOGUES_PATH)
 
     self.dialogueInput = DialogueInputSystem()
     self.cardInput = CardInputSystem()
 
-    -- Register rendering systems.
+    -- Order matters: dialogue flow first, then portrait sync, then drawing.
+    self:addSystem(DialogueSystem())
+    self:addSystem(PortraitSyncSystem(CHARACTERS))
+
     self:addSystem(PortraitRenderSystem())
     self:addSystem(DialogueRenderSystem())
     self:addSystem(CardRenderSystem())
 
-    -- Create character portrait.
-    local portraitEntity = self.registry:createEntity(
+    -- Character portrait.
+    self.registry:createEntity(
         "Character Portrait",
         {
             [CharacterPortrait] = CharacterPortrait.new(
@@ -56,14 +74,7 @@ function VisualNovelScene:new()
         }
     )
 
-    for entity, portrait in self.registry:query(CharacterPortrait) do
-        if entity == portraitEntity then
-            self.portraitComponent = portrait
-            break
-        end
-    end
-
-    -- Create card panel.
+    -- Card panel.
     local panelEntity = self.registry:createEntity(
         "Card Panel",
         {
@@ -78,205 +89,57 @@ function VisualNovelScene:new()
 
     local panel = self.registry:getComponent(panelEntity, CardPanel)
 
-    -- Normal story dialogue.
-    local dialogues = {
-        {
-            speaker = "Alice",
-            text = "¡Hello! I thought you wouldn't come to class."
-        },
-        {
-            speaker = "Victoria",
-            text = "By the way, do you have plans after school?"
-        },
-        {
-            speaker = "You",
-            text = "Not yet, why are you asking?"
-        },
-        {
-            speaker = "Alice",
-            text = "¡Nothing! I was just curious..."
-        }
-    }
+    for _, data in ipairs(CARDS) do
+        local dialogueId = "card_" .. data.name
 
-    self.currentDialogue = 1
-
-    -- Special dialogues associated with each card.
-    local cards = {
-        {
-            name = "Alice",
-            icon = "Assets/Icons/alice.png",
-            specialDialogue = {
-                {
-                    speaker = "Alice",
-                    text = "Oh! You wanted to talk to me?"
-                },
-                {
-                    speaker = "Alice",
-                    text = "I was actually hoping you'd come find me."
-                },
-                {
-                    speaker = "Alice",
-                    text = "Maybe we could spend some time together after school?"
-                }
-            }
-        },
-        {
-            name = "Victoria",
-            icon = "Assets/Icons/victoria.png",
-            specialDialogue = {
-                {
-                    speaker = "Victoria",
-                    text = "Did you need something?"
-                },
-                {
-                    speaker = "Victoria",
-                    text = "I was just reading, but I suppose I can take a break."
-                }
-            }
-        },
-        {
-            name = "School",
-            icon = "Assets/Icons/school.png",
-            specialDialogue = {
-                {
-                    speaker = "You",
-                    text = "The school is busier than usual today."
-                },
-                {
-                    speaker = "You",
-                    text = "I wonder what everyone is doing after class."
-                }
-            }
-        },
-        {
-            name = "Library",
-            icon = "Assets/Icons/library.png",
-            specialDialogue = {
-                {
-                    speaker = "You",
-                    text = "The library is always so peaceful."
-                },
-                {
-                    speaker = "You",
-                    text = "Maybe I should spend more time here."
-                }
-            }
-        },
-        {
-            name = "Friendship",
-            icon = "Assets/Icons/friendship.png",
-            specialDialogue = {
-                {
-                    speaker = "You",
-                    text = "Having friends makes school much more enjoyable."
-                }
-            }
-        },
-        {
-            name = "Love",
-            icon = "Assets/Icons/love.png",
-            specialDialogue = {
-                {
-                    speaker = "You",
-                    text = "I wonder what it feels like to fall in love."
-                },
-                {
-                    speaker = "You",
-                    text = "Maybe I'll find out someday."
-                }
-            }
-        }
-    }
-
-    -- Create all cards.
-    for _, data in ipairs(cards) do
-        local cardComponent = Card.new(
-            data.name,
-            data.icon,
-            100,
-            90,
-            data.specialDialogue
-        )
+        if not self.library:has(dialogueId) then
+            print("Aviso: no hay conversación '" .. dialogueId .. "' en el CSV")
+        end
 
         self.registry:createEntity(
             "Card: " .. data.name,
             {
-                [Card] = cardComponent
+                [Card] = Card.new(data.name, data.icon, 100, 90, dialogueId)
             }
         )
 
         panel.cardCount = panel.cardCount + 1
     end
 
-    -- Connect card clicks to special dialogue.
     panel.onCardClicked = function(card)
-        self:startSpecialDialogue(card)
+        self:startCardDialogue(card)
     end
 
-    -- Create dialogue box.
+    -- Dialogue box + its state live on the same entity.
     local dialogueEntity = self.registry:createEntity(
         "Dialogue Box",
         {
-            [DialogueBox] = DialogueBox.new(
-                40,
-                480,
-                1200,
-                200
-            )
+            [DialogueBox] = DialogueBox.new(40, 480, 1200, 200),
+            [DialogueState] = DialogueState.new(40)
         }
     )
 
-    self.dialogueComponent = self.registry:getComponent(
+    self.dialogueState = self.registry:getComponent(
         dialogueEntity,
-        DialogueBox
+        DialogueState
     )
 
-    -- Normal story dialogue advancement.
-    self.dialogueComponent.onAdvance = function(dialogue)
-        if self.dialogueMode == "special" then
-            self:advanceSpecialDialogue()
-            return
-        end
-
-        self.currentDialogue = self.currentDialogue + 1
-
-        local nextDialogue = dialogues[self.currentDialogue]
-
-        if nextDialogue then
-            dialogue.speaker = nextDialogue.speaker
-            dialogue.text = nextDialogue.text
-
-            self:updatePortrait(nextDialogue.speaker)
-        else
-            dialogue.speaker = ""
-            dialogue.text = "End demo"
-
-            self.portraitComponent:setVisible(false)
-            dialogue.onAdvance = nil
-        end
-    end
-
-    -- Display first story dialogue.
-    self.dialogueComponent.speaker = dialogues[1].speaker
-    self.dialogueComponent.text = dialogues[1].text
-
-    self:updatePortrait(dialogues[1].speaker)
+    -- Raises an error listing the available ids if the story is missing.
+    self.dialogueState:start(self.library:require(STORY_CONVERSATION))
 end
 
--- Handle keyboard input.
+-- Keyboard: advance the dialogue.
 function VisualNovelScene:keypressed(key)
     if key == "space" or key == "return" or key == "kpenter" then
         self.dialogueInput:advance(self.registry)
     end
 end
 
--- Handle mouse clicks.
+-- Mouse: a click on a card starts its dialogue, any other click advances.
 function VisualNovelScene:mousepressed(x, y, button)
     if button ~= 1 then
         return
     end
-
-    print("Mouse clicked:", x, y)
 
     local cardClicked = self.cardInput:mousepressed(
         self.registry,
@@ -285,14 +148,12 @@ function VisualNovelScene:mousepressed(x, y, button)
         button
     )
 
-    print("Card clicked:", cardClicked)
-
     if not cardClicked then
         self.dialogueInput:advance(self.registry)
     end
 end
 
--- Handle horizontal card scrolling.
+-- Horizontal card scrolling.
 function VisualNovelScene:wheelmoved(x, y)
     for entity, panel in self.registry:query(CardPanel) do
         local scrollAmount = x ~= 0 and x or y
@@ -301,118 +162,24 @@ function VisualNovelScene:wheelmoved(x, y)
             panel.cardCount * (panel.cardWidth + panel.gap)
             - panel.gap
 
-        local maxScroll = math.max(
-            0,
-            contentWidth - panel.width
-        )
+        local maxScroll = math.max(0, contentWidth - panel.width)
 
         panel.scrollX = math.max(
             0,
-            math.min(
-                maxScroll,
-                panel.scrollX - scrollAmount * 40
-            )
+            math.min(maxScroll, panel.scrollX - scrollAmount * 40)
         )
     end
 end
 
--- Update character portrait based on dialogue speaker.
-function VisualNovelScene:updatePortrait(speaker)
-    local character = CHARACTERS[speaker]
+function VisualNovelScene:startCardDialogue(card)
+    local lines = self.library:get(card.dialogueId)
 
-    if not character then
-        self.portraitComponent:setVisible(false)
+    if not lines then
+        print("Aviso: la carta '" .. card.name .. "' no tiene diálogo")
         return
     end
 
-    self.portraitComponent:setVisible(true)
-
-    self.portraitComponent:setCharacter(
-        speaker,
-        character.portrait
-    )
-end
-
--- Start a card's special dialogue.
-function VisualNovelScene:startSpecialDialogue(card)
-    if not card or not card.specialDialogue then
-        return
-    end
-
-    if #card.specialDialogue == 0 then
-        return
-    end
-
-    -- Avoid replacing an interaction already in progress.
-    if self.dialogueMode == "special" then
-        return
-    end
-
-    -- Preserve the current story dialogue.
-    self.previousDialogue = {
-        speaker = self.dialogueComponent.speaker,
-        text = self.dialogueComponent.text,
-        portraitVisible = self.portraitComponent.visible
-    }
-
-    self.specialDialogue = card.specialDialogue
-    self.specialDialogueIndex = 1
-    self.dialogueMode = "special"
-
-    self:showSpecialDialogue()
-end
-
--- Display current special dialogue line.
-function VisualNovelScene:showSpecialDialogue()
-    local line = self.specialDialogue[self.specialDialogueIndex]
-
-    if not line then
-        return
-    end
-
-    self.dialogueComponent.speaker = line.speaker or ""
-    self.dialogueComponent.text = line.text or ""
-
-    self:updatePortrait(line.speaker)
-end
-
--- Restore story dialogue after special interaction.
-function VisualNovelScene:endSpecialDialogue()
-    self.dialogueMode = "story"
-
-    self.specialDialogue = nil
-    self.specialDialogueIndex = 1
-
-    if self.previousDialogue then
-        self.dialogueComponent.speaker = self.previousDialogue.speaker
-        self.dialogueComponent.text = self.previousDialogue.text
-
-        self.portraitComponent:setVisible(
-            self.previousDialogue.portraitVisible
-        )
-
-        if self.previousDialogue.portraitVisible then
-            self:updatePortrait(self.previousDialogue.speaker)
-        end
-    end
-
-    self.previousDialogue = nil
-end
-
--- Advance special dialogue.
-function VisualNovelScene:advanceSpecialDialogue()
-    if self.dialogueMode ~= "special" then
-        return
-    end
-
-    self.specialDialogueIndex = self.specialDialogueIndex + 1
-
-    if self.specialDialogueIndex > #self.specialDialogue then
-        self:endSpecialDialogue()
-        return
-    end
-
-    self:showSpecialDialogue()
+    self.dialogueState:start(lines)
 end
 
 return VisualNovelScene

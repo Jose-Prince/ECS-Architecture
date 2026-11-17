@@ -13,6 +13,9 @@ function DialogueBox.new(x, y, width, height)
         speaker = "",
         text = "",
 
+        visibleChars = nil,
+        showContinue = false,
+
         visible = true,
 
         padding = 24,

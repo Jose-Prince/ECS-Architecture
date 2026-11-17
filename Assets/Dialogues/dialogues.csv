@@ -1,0 +1,20 @@
+conversation,speaker,text
+# --- Story ---------------------------------------------------------------
+intro,Alice,"¡Hello! I thought you wouldn't come to class."
+intro,Alice,"By the way, do you have plans after school?"
+intro,You,"Not yet, why are you asking?"
+intro,Alice,"¡Nothing! I was just curious..."
+intro,,End demo
+# --- Card dialogues (id = card_<card name>) ------------------------------
+card_Alice,Alice,"Oh! You wanted to talk to me?"
+card_Alice,Alice,"I was actually hoping you'd come find me."
+card_Alice,Alice,"Maybe we could spend some time together after school?"
+card_Victoria,Victoria,"Did you need something?"
+card_Victoria,Victoria,"I was just reading, but I suppose I can take a break."
+card_School,You,"The school is busier than usual today."
+card_School,You,"I wonder what everyone is doing after class."
+card_Library,You,"The library is always so peaceful."
+card_Library,You,"Maybe I should spend more time here."
+card_Friendship,You,"Having friends makes school much more enjoyable."
+card_Love,You,"I wonder what it feels like to fall in love."
+card_Love,You,"Maybe I'll find out someday."
