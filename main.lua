@@ -1,5 +1,5 @@
 local SceneManager = require("src.sceneManager")
-local TitleScreen = require("src.Scenes.VisualNovelScene")
+local TitleScreen = require("src.Scenes.MainMenuScene")
 local Editor = require("src.Editor.Editor")
 local ECSDebugger = require("src.Editor.ECSDebugger")
 local imlove = require("lib.imlove.imlove")
