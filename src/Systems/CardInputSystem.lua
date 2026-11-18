@@ -1,4 +1,3 @@
-
 local Object = require("lib.classic")
 
 local Card = require("src.Components.Card")
@@ -26,7 +25,8 @@ function CardInputSystem:mousepressed(registry, mouseX, mouseY, button)
 
         local index = 0
 
-        for cardEntity, card in registry:query(Card) do
+        for _, item in ipairs(CardPanel.sortedCards(registry)) do
+            local cardEntity, card = item.entity, item.card
 
             local cardX =
                 panel.x +

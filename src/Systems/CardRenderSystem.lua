@@ -40,7 +40,8 @@ function CardRenderSystem:draw(registry)
 
         local index = 0
 
-        for cardEntity, card in registry:query(Card) do
+        for _, item in ipairs(CardPanel.sortedCards(registry)) do
+            local card = item.card
             local x = panel.x + index * (card.width + panel.gap) - panel.scrollX
             local y = panel.y + (panel.height - card.height) / 2
 

@@ -19,10 +19,10 @@ local function advance(state)
 
     if frame.index < #frame.lines then
         frame.index = frame.index + 1
-        state:showLine(false)
+        state:showLine(false, false)
     elseif #state.stack > 1 then
         table.remove(state.stack)
-        state:showLine(true)
+        state:showLine(true, true)
     else
         state.ended = true
     end

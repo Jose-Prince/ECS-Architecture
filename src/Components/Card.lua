@@ -21,6 +21,7 @@ function Card.new(name, iconPath, width, height, dialogueId)
     local baseHeight = height or 90
 
     return setmetatable({
+        id = name or "Unknown",
         name = name  or "Unknown",
         icon = icon,
 

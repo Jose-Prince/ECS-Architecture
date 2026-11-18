@@ -39,4 +39,19 @@ function CardPanel:getMaxScroll()
     return math.max(0, self:getContentWidth() - self.width)
 end
 
+function CardPanel.sortedCards(registry)
+    local Card = require("src.Components.Card")
+    local list = {}
+
+    for entity, card in registry:query(Card) do
+        list[#list + 1] = { entity = entity, card = card }
+    end
+
+    table.sort(list, function(a, b)
+        return a.entity < b.entity
+    end)
+
+    return list
+end
+
 return CardPanel

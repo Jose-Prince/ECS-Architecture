@@ -17,8 +17,10 @@ function DialogueState.new(charsPerSecond)
         charCount = 0,
         visibleChars = 0,
 
-        advanceREquested = false,
-        ended = false
+        advanceRequested = false,
+        ended = false,
+
+        onLine = nil
     }, DialogueState)
 end
 
@@ -36,7 +38,7 @@ function DialogueState:start(lines)
     end
 
     self.stack[#self.stack+1] = { lines = lines, index = 1}
-    self:showLine(false)
+    self:showLine(false, false)
 
     return true
 end
@@ -55,7 +57,7 @@ function DialogueState:isInterrupted()
     return #self.stack > 1
 end
 
-function DialogueState:showLine(instant)
+function DialogueState:showLine(instant, resumed)
     local frame = self.stack[#self.stack]
 
     if not frame then
@@ -69,6 +71,14 @@ function DialogueState:showLine(instant)
     self.charCount = utf8.len(text) or #text
     self.elapsed = 0
     self.visibleChars = instant and self.charCount or 0
+
+    if self.onLine then
+        self.onLine(line, {
+            resumed = resumed or false,
+            lines = frame.lines,
+            index = frame.index
+        })
+    end
 end
 
 function DialogueState:isLineComplete()

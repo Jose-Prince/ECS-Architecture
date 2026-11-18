@@ -29,29 +29,26 @@ local UIButton = require("src.Components.UIButton")
 local UIButtonRenderSystem = require("src.Systems.UIButtonRenderSystem")
 local UIButtonInputSystem = require("src.Systems.UIButtonInputSystem")
 
+local Assets = require("src.Core.Assets")
+local Background = require("src.Components.Background")
+local BackgroundSystem = require("src.Systems.BackgroundSystem")
+local MapLocation = require("src.Components.MapLocation")
+local MapSystem = require("src.Systems.MapSystem")
+local Toast = require("src.Components.Toast")
+local ToastSystem = require("src.Systems.ToastSystem")
+
 local VisualNovelScene = Scene:extend()
 
 local DIALOGUES_PATH = "Assets/Dialogues/dialogues.csv"
 local STORY_CONVERSATION = "intro"
 
-local CHARACTERS = {
-    ["Alice"] = {
-        portrait = "Assets/Characters/Alice/neutral.jpg"
-    },
+-- Game data lives in src/Data (edit those files to add content).
+local CHARACTERS = require("src.Data.Characters")
+local SCENES = require("src.Data.Scenes")
+local CARDS = require("src.Data.Cards")
 
-    ["Victoria"] = {
-        portrait = "Assets/Characters/Victoria/neutral.jpg"
-    }
-}
-
-local CARDS = {
-    { name = "Alice",      icon = "Assets/Icons/alice.png" },
-    { name = "Victoria",   icon = "Assets/Icons/victoria.png" },
-    { name = "School",     icon = "Assets/Icons/school.png" },
-    { name = "Library",    icon = "Assets/Icons/library.png" },
-    { name = "Friendship", icon = "Assets/Icons/friendship.png" },
-    { name = "Love",       icon = "Assets/Icons/love.png" }
-}
+-- Background shown before any dialogue line asks for another one.
+local START_SCENE = nil
 
 
 -- =========================================================
@@ -85,17 +82,49 @@ function VisualNovelScene:new()
     -- Create pause menu entities
     self:createPauseMenu()
 
+    -- Map screen state
+    self.mapOpen = false
+    self.mapSystem = MapSystem()
+    self.sceneDefinitions = {}
+
+    for _, data in ipairs(SCENES) do
+        self.sceneDefinitions[data.id] = data
+    end
+
+    self:createMap()
+
     -- Register gameplay systems.
     -- LayoutSystem must be first: it turns the Layout components into the
     -- pixel positions that every other system reads.
     self:addSystem(LayoutSystem())
 
     self:addSystem(DialogueSystem())
+    self:addSystem(BackgroundSystem())
     self:addSystem(PortraitSyncSystem(CHARACTERS))
 
+    -- Draw order: background first, toasts last.
     self:addSystem(PortraitRenderSystem())
     self:addSystem(DialogueRenderSystem())
     self:addSystem(CardRenderSystem())
+    self:addSystem(ToastSystem())
+
+    -- =====================================================
+    -- BACKGROUND
+    -- =====================================================
+
+    self.backgroundEntity = self.registry:createEntity(
+        "Background",
+        { [Background] = Background.new(0.5) }
+    )
+
+    self.background = self.registry:getComponent(
+        self.backgroundEntity,
+        Background
+    )
+
+    if START_SCENE then
+        self:changeScene(START_SCENE, true)
+    end
 
     -- =====================================================
     -- CHARACTER PORTRAIT
@@ -148,8 +177,18 @@ function VisualNovelScene:new()
         CardPanel
     )
 
+    self.cardPanel = panel
+
+    -- Cards that are in the panel right now (id -> true).
+    self.ownedCards = {}
+
+    -- Card definitions by id, so a dialogue can hand one out by name.
+    self.cardDefinitions = {}
+
     for _, data in ipairs(CARDS) do
-        local dialogueId = "card_" .. data.name
+        self.cardDefinitions[data.id] = data
+
+        local dialogueId = data.dialogue or ("card_" .. data.id)
 
         if not self.library:has(dialogueId) then
             print(
@@ -159,20 +198,10 @@ function VisualNovelScene:new()
             )
         end
 
-        self.registry:createEntity(
-            "Card: " .. data.name,
-            {
-                [Card] = Card.new(
-                    data.name,
-                    data.icon,
-                    100,
-                    90,
-                    dialogueId
-                )
-            }
-        )
-
-        panel.cardCount = panel.cardCount + 1
+        -- Cards you start with.
+        if data.unlocked then
+            self:giveCard(data.id, true)
+        end
     end
 
     panel.onCardClicked = function(card)
@@ -209,9 +238,131 @@ function VisualNovelScene:new()
         DialogueState
     )
 
+    -- Dialogue lines can change the scene, the character's emotion
+    -- (handled by PortraitSyncSystem) and hand out cards.
+    self.dialogueState.onLine = function(line, info)
+        self:onDialogueLine(line, info)
+    end
+
     self.dialogueState:start(
         self.library:require(STORY_CONVERSATION)
     )
+end
+
+
+-- =========================================================
+-- DIALOGUE LINE EVENTS
+-- =========================================================
+
+-- CSV columns used here (all optional):
+--   scene      background id (see src/Data/Scenes.lua)
+--   give_card  card id (see src/Data/Cards.lua), obtained when the line shows
+function VisualNovelScene:onDialogueLine(line, info)
+    local sceneId = line.scene
+
+    -- Coming back from a card dialogue: restore the background that
+    -- the interrupted conversation had, since the card may have changed it.
+    if info.resumed and (sceneId == nil or sceneId == "") then
+        for i = info.index, 1, -1 do
+            local previous = info.lines[i].scene
+
+            if previous and previous ~= "" then
+                sceneId = previous
+                break
+            end
+        end
+    end
+
+    if sceneId and sceneId ~= "" then
+        self:changeScene(sceneId)
+    end
+
+    -- Don't hand out the same card again when resuming.
+    if not info.resumed and line.give_card and line.give_card ~= "" then
+        for cardId in line.give_card:gmatch("[^|]+") do
+            self:giveCard(cardId:match("^%s*(.-)%s*$"))
+        end
+    end
+end
+
+
+-- =========================================================
+-- SCENES (BACKGROUNDS)
+-- =========================================================
+
+-- instant = true skips the fade (used for the very first background).
+function VisualNovelScene:changeScene(sceneId, instant)
+    local data = self.sceneDefinitions[sceneId]
+
+    if not data then
+        print("Aviso: no existe el escenario '" .. tostring(sceneId) .. "'")
+        return false
+    end
+
+    local filter = data.filter or "nearest"
+    local image = Assets.image(data.background, filter)
+
+    if not image then
+        return false
+    end
+
+    local previousDuration = self.background.fadeDuration
+
+    if instant then
+        self.background.fadeDuration = 0
+    end
+
+    self.background:set(sceneId, image, filter)
+    self.background.fadeDuration = previousDuration
+
+    if instant then
+        self.background.previous = nil
+        self.background.progress = 1
+    end
+
+    return true
+end
+
+
+-- =========================================================
+-- CARDS
+-- =========================================================
+
+-- Adds a card to the panel. Does nothing if you already have it.
+-- silent = true skips the "new card" message (starting cards).
+function VisualNovelScene:giveCard(cardId, silent)
+    local data = self.cardDefinitions[cardId]
+
+    if not data then
+        print("Aviso: no existe la carta '" .. tostring(cardId) .. "' (Data/Cards.lua)")
+        return false
+    end
+
+    if self.ownedCards[cardId] then
+        return false
+    end
+
+    self.ownedCards[cardId] = true
+
+    local card = Card.new(
+        data.name,
+        data.icon,
+        100,
+        90,
+        data.dialogue or ("card_" .. data.id)
+    )
+
+    card.id = data.id
+
+    self.registry:createEntity("Card: " .. data.name, { [Card] = card })
+
+    self.cardPanel.cardCount = self.cardPanel.cardCount + 1
+
+    if not silent then
+        self:showToast("New card: " .. data.name)
+    end
+
+    return true
 end
 
 
@@ -314,7 +465,17 @@ function VisualNovelScene:draw()
         )
 
         -- Draw pause buttons on top of the overlay.
-        self.uiRenderSystem:draw(self.registry)
+        self.uiRenderSystem:draw(self.registry, "pause")
+    end
+
+    -- Map button (hidden while the map or the pause menu is on top).
+    if not self.isPaused and not self.mapOpen then
+        self.uiRenderSystem:draw(self.registry, "hud")
+    end
+
+    if self.mapOpen and not self.isPaused then
+        self.mapSystem:draw(self.registry, self.background.sceneId)
+        self.uiRenderSystem:draw(self.registry, "map")
     end
 
     love.graphics.setColor(1, 1, 1, 1)
@@ -326,14 +487,35 @@ end
 -- =========================================================
 
 function VisualNovelScene:keypressed(key)
-    -- Escape always toggles pause.
+    -- Escape closes the map first; otherwise it toggles pause.
     if key == "escape" then
-        self:togglePause()
+        if self.mapOpen and not self.isPaused then
+            self:closeMap()
+        else
+            self:togglePause()
+        end
+
         return true
     end
 
     -- Ignore gameplay keyboard input while paused.
     if self.isPaused then
+        return true
+    end
+
+    -- M opens/closes the map.
+    if key == "m" then
+        if self.mapOpen then
+            self:closeMap()
+        else
+            self:openMap()
+        end
+
+        return true
+    end
+
+    -- The map swallows the rest of the keys.
+    if self.mapOpen then
         return true
     end
 
@@ -356,14 +538,17 @@ end
 
 function VisualNovelScene:mousemoved(x, y, dx, dy)
     if self.isPaused then
-        self.uiInputSystem:mousemoved(
-            self.registry,
-            x,
-            y
-        )
-
+        self.uiInputSystem:mousemoved(self.registry, x, y, "pause")
         return
     end
+
+    if self.mapOpen then
+        self.mapSystem:mousemoved(self.registry, x, y)
+        self.uiInputSystem:mousemoved(self.registry, x, y, "map")
+        return
+    end
+
+    self.uiInputSystem:mousemoved(self.registry, x, y, "hud")
 end
 
 
@@ -378,10 +563,32 @@ function VisualNovelScene:mousepressed(x, y, button)
             self.registry,
             x,
             y,
-            button
+            button,
+            "pause"
         )
 
         -- Consume all clicks while paused.
+        return true
+    end
+
+    -- Map screen: pick a place, press CLOSE, or click outside the panel.
+    if self.mapOpen then
+        if self.uiInputSystem:mousepressed(self.registry, x, y, button, "map") then
+            return true
+        end
+
+        local sceneId = self.mapSystem:mousepressed(self.registry, x, y, button)
+
+        if sceneId then
+            self:travelTo(sceneId)
+        end
+
+        -- Consume all clicks while the map is open.
+        return true
+    end
+
+    -- Map button.
+    if self.uiInputSystem:mousepressed(self.registry, x, y, button, "hud") then
         return true
     end
 
@@ -410,7 +617,7 @@ end
 -- =========================================================
 
 function VisualNovelScene:wheelmoved(x, y)
-    if self.isPaused then
+    if self.isPaused or self.mapOpen then
         return
     end
 
@@ -450,6 +657,142 @@ end
 
 
 -- =========================================================
+-- MAP SCREEN
+-- =========================================================
+
+function VisualNovelScene:createMap()
+    -- Map button, top right.
+    self.registry:createEntity(
+        "Map Button",
+        {
+            [UIButton] = UIButton.new({
+                text = "MAP (M)",
+                fontSize = 18,
+                group = "hud",
+
+                onClick = function()
+                    self:openMap()
+                end
+            }),
+
+            [Layout] = Layout.new({
+                anchorX = 1,
+                anchorY = 0,
+                offsetX = -20,
+                offsetY = 20,
+                width = 130,
+                height = 44
+            })
+        }
+    )
+
+    -- One entity per visitable place.
+    local count = 0
+
+    for _, data in ipairs(SCENES) do
+        if data.visitable ~= false then
+            local image = Assets.image(data.background, data.filter or "nearest")
+
+            self.registry:createEntity(
+                "Map: " .. data.name,
+                {
+                    [MapLocation] = MapLocation.new(
+                        data.id,
+                        data.name,
+                        image,
+                        data.filter or "nearest"
+                    )
+                }
+            )
+
+            count = count + 1
+        end
+    end
+
+    -- CLOSE button, inside the bottom of the map panel.
+    self.registry:createEntity(
+        "Map Close Button",
+        {
+            [UIButton] = UIButton.new({
+                text = "CLOSE",
+                fontSize = 18,
+                group = "map",
+
+                onClick = function()
+                    self:closeMap()
+                end
+            }),
+
+            [Layout] = Layout.new({
+                anchorX = 0.5,
+                anchorY = 0.5,
+                pivotX = 0.5,
+                pivotY = 0,
+                offsetY = MapSystem.panelHeight(count) / 2 - 70,
+                width = 160,
+                height = 46
+            })
+        }
+    )
+end
+
+function VisualNovelScene:openMap()
+    -- Places are reached between conversations: card and place dialogues
+    -- sit on top of the story and can't be stacked any further.
+    if self.dialogueState:isInterrupted() then
+        self:showToast("Finish this conversation first")
+        return false
+    end
+
+    self.mapOpen = true
+
+    for entity, location in self.registry:query(MapLocation) do
+        location.hovered = false
+    end
+
+    return true
+end
+
+function VisualNovelScene:closeMap()
+    self.mapOpen = false
+
+    for entity, button in self.registry:query(UIButton) do
+        button.hovered = false
+    end
+end
+
+-- Goes to a place: changes the background and plays its conversation
+-- ("location_<id>" in dialogues.csv), if there is one.
+function VisualNovelScene:travelTo(sceneId)
+    self:closeMap()
+
+    if sceneId == self.background.sceneId then
+        return
+    end
+
+    self:changeScene(sceneId)
+
+    local lines = self.library:get("location_" .. sceneId)
+
+    if lines then
+        self.dialogueState:start(lines)
+    end
+end
+
+
+-- =========================================================
+-- MESSAGES
+-- =========================================================
+
+function VisualNovelScene:showToast(text)
+    self.registry:createEntity(
+        "Toast",
+        { [Toast] = Toast.new(text, 3.5) }
+    )
+end
+
+
+-- =========================================================
 -- PAUSE MENU
 -- =========================================================
 
@@ -474,6 +817,7 @@ function VisualNovelScene:createPauseMenu()
             [UIButton] = UIButton.new({
                 text = "RESUME",
                 fontSize = 22,
+                group = "pause",
 
                 onClick = function()
                     self:resumeGame()
@@ -491,6 +835,7 @@ function VisualNovelScene:createPauseMenu()
             [UIButton] = UIButton.new({
                 text = "MAIN MENU",
                 fontSize = 22,
+                group = "pause",
 
                 onClick = function()
                     local MainMenuScene = require("src.Scenes.MainMenuScene")
@@ -510,6 +855,7 @@ function VisualNovelScene:createPauseMenu()
             [UIButton] = UIButton.new({
                 text = "EXIT",
                 fontSize = 22,
+                group = "pause",
 
                 onClick = function()
                     love.event.quit()
