@@ -2,6 +2,10 @@ local Scene = require("src.ECS.scene")
 
 local SceneManager = require("src.sceneManager")
 
+local Viewport = require("src.Core.Viewport")
+local Layout = require("src.Components.Layout")
+local LayoutSystem = require("src.Systems.LayoutSystem")
+
 local DialogueLibrary = require("src.Dialogue.DialogueLibrary")
 
 local DialogueBox = require("src.Components.DialogueBox")
@@ -67,11 +71,6 @@ function VisualNovelScene:new()
     -- Pause state
     self.isPaused = false
 
-    -- Pause menu fonts
-    self.pauseFont = love.graphics.newFont(48)
-    self.pauseSubtitleFont = love.graphics.newFont(18)
-    self.pauseButtonFont = love.graphics.newFont(22)
-
     -- UI systems
     self.uiRenderSystem = UIButtonRenderSystem.new()
     self.uiInputSystem = UIButtonInputSystem.new()
@@ -86,7 +85,11 @@ function VisualNovelScene:new()
     -- Create pause menu entities
     self:createPauseMenu()
 
-    -- Register gameplay systems
+    -- Register gameplay systems.
+    -- LayoutSystem must be first: it turns the Layout components into the
+    -- pixel positions that every other system reads.
+    self:addSystem(LayoutSystem())
+
     self:addSystem(DialogueSystem())
     self:addSystem(PortraitSyncSystem(CHARACTERS))
 
@@ -101,13 +104,19 @@ function VisualNovelScene:new()
     self.registry:createEntity(
         "Character Portrait",
         {
-            [CharacterPortrait] = CharacterPortrait.new(
-                "Alice",
-                850,
-                60,
-                350,
-                420
-            )
+            [CharacterPortrait] = CharacterPortrait.new("Alice"),
+
+            -- Bottom right, resting on top of the dialogue box.
+            [Layout] = Layout.new({
+                anchorX = 1,
+                anchorY = 1,
+                offsetX = -80,
+                offsetY = -260,
+                width = 350,
+                height = 420,
+
+                inColumn = true
+            })
         }
     )
 
@@ -118,12 +127,19 @@ function VisualNovelScene:new()
     local panelEntity = self.registry:createEntity(
         "Card Panel",
         {
-            [CardPanel] = CardPanel.new(
-                64,
-                575,
-                1152,
-                95
-            )
+            [CardPanel] = CardPanel.new(),
+
+            -- Bottom center, inside the dialogue box.
+            [Layout] = Layout.new({
+                anchorX = 0.5,
+                anchorY = 1,
+                offsetY = -50,
+                height = 95,
+
+                inColumn = true,
+                stretchX = true,
+                marginX = 64
+            })
         }
     )
 
@@ -170,12 +186,19 @@ function VisualNovelScene:new()
     local dialogueEntity = self.registry:createEntity(
         "Dialogue Box",
         {
-            [DialogueBox] = DialogueBox.new(
-                40,
-                480,
-                1200,
-                200
-            ),
+            [DialogueBox] = DialogueBox.new(),
+
+            -- Bottom center, as wide as the content column.
+            [Layout] = Layout.new({
+                anchorX = 0.5,
+                anchorY = 1,
+                offsetY = -40,
+                height = 220,
+
+                inColumn = true,
+                stretchX = true,
+                marginX = 40
+            }),
 
             [DialogueState] = DialogueState.new(40)
         }
@@ -216,8 +239,11 @@ function VisualNovelScene:draw()
     VisualNovelScene.super.draw(self)
 
     if self.isPaused then
-        local screenWidth, screenHeight =
-            love.graphics.getDimensions()
+        -- Use the viewport (the area where the game is drawn), not the
+        -- window: the window also contains the editor.
+        local screenWidth = Viewport.width
+        local screenHeight = Viewport.height
+        local scale = Viewport.scale
 
         -- Dark overlay
         love.graphics.setColor(0, 0, 0, 0.65)
@@ -231,8 +257,8 @@ function VisualNovelScene:draw()
         )
 
         -- Pause panel
-        local panelWidth = 420
-        local panelHeight = 430
+        local panelWidth = 420 * scale
+        local panelHeight = 430 * scale
 
         local panelX = (screenWidth - panelWidth) / 2
         local panelY = (screenHeight - panelHeight) / 2
@@ -247,41 +273,44 @@ function VisualNovelScene:draw()
             panelY,
             panelWidth,
             panelHeight,
-            18,
-            18
+            18 * scale,
+            18 * scale
         )
 
         -- Title
-        love.graphics.setFont(self.pauseFont)
+        local titleFont = Viewport.font(48)
+
+        love.graphics.setFont(titleFont)
 
         love.graphics.setColor(
             1, 0.88, 0.92, 1
         )
 
         local title = "PAUSED"
-        local titleWidth = self.pauseFont:getWidth(title)
+        local titleWidth = titleFont:getWidth(title)
 
         love.graphics.print(
             title,
             (screenWidth - titleWidth) / 2,
-            panelY + 55
+            panelY + 55 * scale
         )
 
         -- Subtitle
-        love.graphics.setFont(self.pauseSubtitleFont)
+        local subtitleFont = Viewport.font(18)
+
+        love.graphics.setFont(subtitleFont)
 
         love.graphics.setColor(
             0.78, 0.73, 0.83, 1
         )
 
         local subtitle = "Take a little break"
-        local subtitleWidth =
-            self.pauseSubtitleFont:getWidth(subtitle)
+        local subtitleWidth = subtitleFont:getWidth(subtitle)
 
         love.graphics.print(
             subtitle,
             (screenWidth - subtitleWidth) / 2,
-            panelY + 125
+            panelY + 125 * scale
         )
 
         -- Draw pause buttons on top of the overlay.
@@ -388,20 +417,11 @@ function VisualNovelScene:wheelmoved(x, y)
     for entity, panel in self.registry:query(CardPanel) do
         local scrollAmount = x ~= 0 and x or y
 
-        local contentWidth =
-            panel.cardCount * (panel.cardWidth + panel.gap)
-            - panel.gap
-
-        local maxScroll = math.max(
-            0,
-            contentWidth - panel.width
-        )
-
         panel.scrollX = math.max(
             0,
             math.min(
-                maxScroll,
-                panel.scrollX - scrollAmount * 40
+                panel:getMaxScroll(),
+                panel.scrollX - scrollAmount * 40 * Viewport.scale
             )
         )
     end
@@ -434,7 +454,18 @@ end
 -- =========================================================
 
 function VisualNovelScene:createPauseMenu()
-    local centerX = 640
+    -- Buttons hang from the center of the viewport.
+    local function buttonLayout(offsetY)
+        return Layout.new({
+            anchorX = 0.5,
+            anchorY = 0.5,
+            pivotX = 0.5,
+            pivotY = 0,
+            offsetY = offsetY,
+            width = 280,
+            height = 60
+        })
+    end
 
     -- Resume
     self.registry:createEntity(
@@ -442,19 +473,14 @@ function VisualNovelScene:createPauseMenu()
         {
             [UIButton] = UIButton.new({
                 text = "RESUME",
-
-                x = centerX - 140,
-                y = 330,
-
-                width = 280,
-                height = 60,
-
-                font = self.pauseButtonFont,
+                fontSize = 22,
 
                 onClick = function()
                     self:resumeGame()
                 end
-            })
+            }),
+
+            [Layout] = buttonLayout(-30)
         }
     )
 
@@ -464,21 +490,16 @@ function VisualNovelScene:createPauseMenu()
         {
             [UIButton] = UIButton.new({
                 text = "MAIN MENU",
-
-                x = centerX - 140,
-                y = 410,
-
-                width = 280,
-                height = 60,
-
-                font = self.pauseButtonFont,
+                fontSize = 22,
 
                 onClick = function()
                     local MainMenuScene = require("src.Scenes.MainMenuScene")
                     SceneManager:setScene(MainMenuScene())
 
                 end
-            })
+            }),
+
+            [Layout] = buttonLayout(50)
         }
     )
 
@@ -488,19 +509,14 @@ function VisualNovelScene:createPauseMenu()
         {
             [UIButton] = UIButton.new({
                 text = "EXIT",
-
-                x = centerX - 140,
-                y = 490,
-
-                width = 280,
-                height = 60,
-
-                font = self.pauseButtonFont,
+                fontSize = 22,
 
                 onClick = function()
                     love.event.quit()
                 end
-            })
+            }),
+
+            [Layout] = buttonLayout(130)
         }
     )
 end

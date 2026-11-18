@@ -1,11 +1,13 @@
 local Object = require("lib.classic")
 local utf8 = require("utf8")
 
+local Viewport = require("src.Core.Viewport")
 local DialogueBox = require("src.Components.DialogueBox")
 
 local DialogueRenderSystem = Object:extend()
 
-local function spliText(text, visibleChars)
+-- Splits text into the revealed part and the hidden part.
+local function splitText(text, visibleChars)
     if visibleChars == nil then
         return text, ""
     end
@@ -26,6 +28,9 @@ local function spliText(text, visibleChars)
 end
 
 function DialogueRenderSystem:draw(registry)
+    local scale = Viewport.scale
+    local previousFont = love.graphics.getFont()
+
     for entity, dialogue in registry:query(DialogueBox) do
         if not dialogue.visible then
             goto continue
@@ -36,24 +41,27 @@ function DialogueRenderSystem:draw(registry)
         local width = dialogue.width
         local height = dialogue.height
         local padding = dialogue.padding
+        local radius = 12 * scale
 
         love.graphics.setColor(0.08, 0.07, 0.12, 0.92)
         love.graphics.rectangle(
             "fill",
             x, y,
             width, height,
-            12, 12
+            radius, radius
         )
 
         love.graphics.setColor(0.85, 0.72, 0.78, 1)
-        love.graphics.setLineWidth(2)
+        love.graphics.setLineWidth(math.max(1, 2 * scale))
         love.graphics.rectangle(
             "line",
             x, y,
             width, height,
-            12, 12
+            radius, radius
         )
 
+        -- Speaker name.
+        love.graphics.setFont(Viewport.font(dialogue.speakerSize))
         love.graphics.setColor(1, 0.78, 0.84, 1)
         love.graphics.printf(
             dialogue.speaker,
@@ -63,13 +71,17 @@ function DialogueRenderSystem:draw(registry)
             "left"
         )
 
-        local shown, hidden = spliText(dialogue.text, dialogue.visibleChars)
+        -- The full text is always laid out, but the hidden part is drawn
+        -- with alpha 0. This keeps word wrapping stable: words do not jump
+        -- to the next line while they are being written.
+        local shown, hidden = splitText(dialogue.text, dialogue.visibleChars)
 
+        love.graphics.setFont(Viewport.font(dialogue.textSize))
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.printf(
             {
                 { 1, 1, 1, 1 }, shown,
-                { 1, 1, 1, 1 }, hidden
+                { 1, 1, 1, 0 }, hidden
             },
             x + padding,
             y + padding + dialogue.speakerHeight,
@@ -77,22 +89,26 @@ function DialogueRenderSystem:draw(registry)
             "left"
         )
 
+        -- Blinking triangle: the line is complete, press to continue.
         if dialogue.showContinue and math.floor(love.timer.getTime() * 2) % 2 == 0 then
-            local tx = x + width - padding - 8
-            local ty = y + height - padding - 6
+            local half = 8 * scale
+            local tx = x + width - padding - half
+            local ty = y + height - padding - 6 * scale
 
             love.graphics.setColor(0.85, 0.72, 0.78, 1)
             love.graphics.polygon(
                 "fill",
-                tx - 8, ty - 5,
-                tx + 8, ty - 5,
-                tx, ty + 5
+                tx - half, ty - half * 0.6,
+                tx + half, ty - half * 0.6,
+                tx, ty + half * 0.6
             )
         end
 
         love.graphics.setColor(1, 1, 1, 1)
         ::continue::
     end
+
+    love.graphics.setFont(previousFont)
 end
 
 return DialogueRenderSystem

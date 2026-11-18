@@ -1,12 +1,20 @@
 local Object = require("lib.classic")
 
+local Viewport = require("src.Core.Viewport")
 local Card = require("src.Components.Card")
 local CardPanel = require("src.Components.CardPanel")
 
 local CardRenderSystem = Object:extend()
 
+local NAME_FONT_SIZE = 13
+
 function CardRenderSystem:draw(registry)
+    local scale = Viewport.scale
+    local previousFont = love.graphics.getFont()
+
     for panelEntity, panel in registry:query(CardPanel) do
+        local radius = 8 * scale
+
         love.graphics.setColor(0.12, 0.10, 0.16, 0.95)
 
         love.graphics.rectangle(
@@ -15,8 +23,8 @@ function CardRenderSystem:draw(registry)
             panel.y,
             panel.width,
             panel.height,
-            8,
-            8
+            radius,
+            radius
         )
 
         local sx, sy, sw, sh = love.graphics.getScissor()
@@ -27,6 +35,8 @@ function CardRenderSystem:draw(registry)
             panel.width,
             panel.height
         )
+
+        love.graphics.setFont(Viewport.font(NAME_FONT_SIZE))
 
         local index = 0
 
@@ -42,15 +52,15 @@ function CardRenderSystem:draw(registry)
                 y,
                 card.width,
                 card.height,
-                8,
-                8
+                radius,
+                radius
             )
 
             if card.icon then
                 local iconX = x + (card.width - card.iconSize) / 2
-                local iconY = y + 8
+                local iconY = y + 8 * scale
 
-                local scale = math.min(
+                local iconScale = math.min(
                     card.iconSize / card.icon:getWidth(),
                     card.iconSize / card.icon:getHeight()
                 )
@@ -62,18 +72,18 @@ function CardRenderSystem:draw(registry)
                     iconX,
                     iconY,
                     0,
-                    scale,
-                    scale
+                    iconScale,
+                    iconScale
                 )
             end
-            
+
             love.graphics.setColor(1, 1, 1, 1)
 
             love.graphics.printf(
                 card.name,
-                x + 4,
-                y + card.height - 25,
-                card.width - 8,
+                x + 4 * scale,
+                y + card.height - 25 * scale,
+                card.width - 8 * scale,
                 "center"
             )
 
@@ -86,6 +96,8 @@ function CardRenderSystem:draw(registry)
             love.graphics.setScissor()
         end
     end
+
+    love.graphics.setFont(previousFont)
     love.graphics.setColor(1, 1, 1, 1)
 end
 

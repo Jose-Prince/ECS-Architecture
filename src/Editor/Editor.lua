@@ -4,6 +4,8 @@ local imlove = require("lib.imlove.imlove")
 local SceneManager = require("src.sceneManager")
 local ECSDebugger = require("src.Editor.ECSDebugger")
 
+local Viewport = require("src.Core.Viewport")
+
 local Editor = {}
 
 local editorFont = nil
@@ -38,6 +40,10 @@ end
 function Editor:update(dt, scene)
     self.scene = scene
     self.registry = scene and scene.registry or nil
+
+    self.debuggerVisible = ECSDebugger.visible
+
+    self:updateViewport()
 end
 
 function Editor:draw()
@@ -185,6 +191,36 @@ end
 -- Main Workspace
 -- =========================================================
 
+-- Free area of the window where the game is shown: below the header and the
+-- controls, and to the left of the ECS debugger window when it is visible.
+-- Returns the size of that area.
+function Editor:getViewportSize()
+    local screenWidth = love.graphics.getWidth()
+    local screenHeight = love.graphics.getHeight()
+
+    local reserved = 0
+
+    if self.debuggerVisible then
+        reserved = ECSDebugger.WIDTH + PANEL_SPACING
+    end
+
+    return screenWidth - reserved, screenHeight - VIEWPORT_Y
+end
+
+-- Tells the game how big its drawing area is. Everything that is laid out
+-- relative to the screen follows this size (see Core/Viewport).
+function Editor:updateViewport()
+    local width, height = self:getViewportSize()
+
+    if width <= 0 or height <= 0 then
+        return false
+    end
+
+    Viewport.resize(width, height)
+
+    return true
+end
+
 function Editor:drawWorkspace()
     if not self.sceneCanvas then
         return
@@ -192,6 +228,7 @@ function Editor:drawWorkspace()
 
     love.graphics.setColor(1, 1, 1, 1)
 
+    -- The canvas has exactly the size of the free area, so it is drawn 1:1.
     love.graphics.draw(
         self.sceneCanvas,
         0,
@@ -204,17 +241,12 @@ end
 -- ===================================================
 
 function Editor:updateSceneCanvas()
-    local screenWidth = love.graphics.getWidth()
-    local screenHeight = love.graphics.getHeight()
-
-    local debuggerWidth = self.debuggerVisible and DEBUGGER_WIDTH or 0
-
-    local width = screenWidth - debuggerWidth - PANEL_SPACING
-    local height = screenHeight - VIEWPORT_Y
-
-    if width <= 0 or height <= 0 then
+    if not self:updateViewport() then
         return
     end
+
+    local width = Viewport.width
+    local height = Viewport.height
 
     if not self.sceneCanvas or self.viewportWidth ~= width or self.viewportHeight ~= height then
         if self.sceneCanvas then
@@ -240,28 +272,60 @@ function Editor:updateSceneCanvas()
     love.graphics.pop()
 end
 
+-- ===================================================
+-- Mouse
+-- ===================================================
+
+-- Converts screen coordinates into scene (viewport) coordinates.
+-- Returns nil when the point is outside the viewport.
+function Editor:toSceneCoords(x, y)
+    local sceneX = x
+    local sceneY = y - VIEWPORT_Y
+
+    if sceneX < 0 or sceneX > self.viewportWidth then
+        return nil
+    end
+
+    if sceneY < 0 or sceneY > self.viewportHeight then
+        return nil
+    end
+
+    return sceneX, sceneY
+end
 
 function Editor:mousepressed(x, y, button)
     if not self.scene then
         return
     end
 
-    -- Convert screen coordinates into scene canvas coordinates.
-    local sceneX = x
-    local sceneY = y - VIEWPORT_Y
+    local sceneX, sceneY = self:toSceneCoords(x, y)
 
-    -- Ignore clicks outside the scene viewport.
-    if sceneX < 0 or sceneX > self.viewportWidth then
-        return
-    end
-
-    if sceneY < 0 or sceneY > self.viewportHeight then
-        return
-    end
-
-    -- Forward the converted coordinates to the scene.
-    if self.scene.mousepressed then
+    if sceneX and self.scene.mousepressed then
         self.scene:mousepressed(sceneX, sceneY, button)
+    end
+end
+
+function Editor:mousereleased(x, y, button)
+    if not self.scene then
+        return
+    end
+
+    local sceneX, sceneY = self:toSceneCoords(x, y)
+
+    if sceneX and self.scene.mousereleased then
+        self.scene:mousereleased(sceneX, sceneY, button)
+    end
+end
+
+function Editor:mousemoved(x, y, dx, dy)
+    if not self.scene then
+        return
+    end
+
+    local sceneX, sceneY = self:toSceneCoords(x, y)
+
+    if sceneX and self.scene.mousemoved then
+        self.scene:mousemoved(sceneX, sceneY, dx, dy)
     end
 end
 

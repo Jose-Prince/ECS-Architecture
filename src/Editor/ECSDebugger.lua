@@ -10,6 +10,8 @@ ECSDebugger.visible = true
 ECSDebugger.selectedEntity = nil
 ECSDebugger.activeTab = 1
 
+ECSDebugger.WIDTH = 350
+
 local newEntityName = "New Entity"
 
 local TABS = {
@@ -434,7 +436,7 @@ function ECSDebugger:draw(scene)
     local screenWidth = love.graphics.getWidth()
     local screenHeight = love.graphics.getHeight()
 
-    local debuggerWidth = 350
+    local debuggerWidth = ECSDebugger.WIDTH
     local debuggerHeight = screenHeight - 135
 
     imlove.SetNextWindowPos(

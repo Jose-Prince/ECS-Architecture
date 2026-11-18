@@ -23,7 +23,7 @@ function love.draw()
     imlove.Render()
 end
 
-function love.keypressed(key)
+function love.keypressed(key, scancode, isrepeat)
     if imlove.keypressed(key, scancode, isrepeat) then
         return
     end
@@ -53,7 +53,11 @@ function love.mousereleased(x, y, button)
         return
     end
 
-    SceneManager:mousereleased(x, y, button)
+    Editor:mousereleased(x, y, button)
+end
+
+function love.mousemoved(x, y, dx, dy)
+    Editor:mousemoved(x, y, dx, dy)
 end
 
 function love.wheelmoved(dx, dy)

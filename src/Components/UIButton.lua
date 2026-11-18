@@ -18,8 +18,13 @@ function UIButton.new(config)
     self.enabled = config.enabled ~= false
     self.hovered = false
 
-    self.font = config.font or love.graphics.getFont()
-    self.radius = config.radius or 8
+    -- Design units.
+    self.fontSize = config.fontSize or 20
+    self.baseRadius = config.radius or 8
+
+    -- Pixels (resolved).
+    self.font = love.graphics.getFont()
+    self.radius = self.baseRadius
 
     self.normalColor = config.normalColor or {
         0.35, 0.27, 0.42, 1

@@ -17,13 +17,21 @@ function Card.new(name, iconPath, width, height, dialogueId)
         end
     end
 
+    local baseWidth = width or 100
+    local baseHeight = height or 90
+
     return setmetatable({
         name = name  or "Unknown",
         icon = icon,
 
-        width = width or 100,
-        height = height or 90,
+        -- Design units.
+        baseWidth = baseWidth,
+        baseHeight = baseHeight,
+        baseIconSize = 48,
 
+        -- Pixels (resolved).
+        width = baseWidth,
+        height = baseHeight,
         iconSize = 48,
 
         dialogueId = dialogueId or "",

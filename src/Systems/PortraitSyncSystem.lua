@@ -1,15 +1,17 @@
 local Object = require("lib.classic")
 
 local DialogueState = require("src.Components.DialogueState")
-local ChracterPortrait = require("src.Components.CharacterPortrait")
+local CharacterPortrait = require("src.Components.CharacterPortrait")
 
 local PortraitSyncSystem = Object:extend()
 
+-- characters: { Alice = { portrait = "path.jpg" }, ... }
 function PortraitSyncSystem:new(characters)
-    self.chracters = chracters or {}
+    self.characters = characters or {}
     self.imageCache = {}
 end
 
+-- Loads each image once and reuses it.
 function PortraitSyncSystem:getImage(path)
     local cached = self.imageCache[path]
 
@@ -25,7 +27,7 @@ function PortraitSyncSystem:getImage(path)
         return image
     end
 
-    print("Couldnt load portrait:", path, image)
+    print("Couldn't load portrait:", path, image)
     self.imageCache[path] = false
 
     return nil
@@ -33,7 +35,7 @@ end
 
 function PortraitSyncSystem:update(registry, dt)
     local speaker = nil
-    
+
     for entity, state in registry:query(DialogueState) do
         if state.current then
             speaker = state.current.speaker or ""
@@ -48,11 +50,11 @@ function PortraitSyncSystem:update(registry, dt)
         if portrait.shownSpeaker ~= speaker then
             portrait.shownSpeaker = speaker
 
-            local chracter = self.chracters[speaker]
+            local character = self.characters[speaker]
 
-            if chracter then
+            if character then
                 portrait.name = speaker
-                portrait.image = self:getImage(chracter.portrait)
+                portrait.image = self:getImage(character.portrait)
                 portrait.visible = true
             else
                 portrait.visible = false
