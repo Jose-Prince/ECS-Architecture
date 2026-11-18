@@ -28,7 +28,6 @@ function PortraitSyncSystem:warnOnce(key, message)
     end
 end
 
--- Picks the image for a character + emotion, falling back to neutral.
 function PortraitSyncSystem:getImage(speaker, character, emotion)
     local expressions = character.expressions or {}
 
@@ -45,7 +44,7 @@ function PortraitSyncSystem:getImage(speaker, character, emotion)
         path = expressions[DEFAULT_EMOTION]
     end
 
-    return Assets.image(path)
+    return Assets.image(path, "nearest")
 end
 
 function PortraitSyncSystem:update(registry, dt)

@@ -1,16 +1,16 @@
-conversation,speaker,text,scene,emotion,give_card
+conversation,speaker,text,scene,emotion,give_card,choices,jump,set
 # Optional columns:
 #   scene      = background id (src/Data/Scenes.lua). Stays until another line changes it.
 #   emotion    = neutral | happy | sad | surprise. Only for that line; empty = neutral.
 #   give_card  = card id (src/Data/Cards.lua) obtained when the line is shown. Several: Library|Love
 # --- Story ---------------------------------------------------------------
-intro,Alice,"¡Hello! I thought you wouldn't come to class.",classroom,happy,
-intro,Alice,"By the way, do you have plans after school?",,neutral,
-intro,You,"Not yet, why are you asking?",,,
-intro,Alice,"¡Nothing! I was just curious...",,surprise,
-intro,Sakura,"Did somebody say plans? I found a letter in my locker this morning!",,surprise,
-intro,Sakura,"It was signed with just a heart... Who could have written it?",,sad,
-intro,,End demo,,,
+intro,Yamada,"¡Nothing! I was just curious...",,surprise,
+intro,Yamada,"Actually... would you like to walk home together?",,happy,,"Of course!>intro_yes>alice+1|Sorry, I'm busy>intro_no>alice-1|Let me think about it>",intro_sakura,
+intro_yes,Yamada,"Really? ¡Yay! I'll wait for you at the gate!",,happy,,,intro_sakura,walk_home=true
+intro_no,Yamada,"Oh... that's okay. Maybe another day.",,sad,,,intro_sakura,
+intro_sakura,Sakura,"Did somebody say plans? I found a letter in my locker this morning!",,surprise,
+intro_sakura,Sakura,"It was signed with just a heart... Who could have written it?",,sad,
+intro_sakura,,End demo,,,
 # --- Card dialogues (id = card_<card id>) --------------------------------
 card_Alice,Alice,"Oh! You wanted to talk to me?",,happy,
 card_Alice,Alice,"I was actually hoping you'd come find me.",,surprise,

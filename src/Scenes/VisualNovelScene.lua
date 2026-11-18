@@ -37,6 +37,9 @@ local MapSystem = require("src.Systems.MapSystem")
 local Toast = require("src.Components.Toast")
 local ToastSystem = require("src.Systems.ToastSystem")
 
+local ChoiceMenu = require("src.Components.ChoiceMenu")
+local ChoiceSystem = require("src.Systems.ChoiceSystem")
+
 local VisualNovelScene = Scene:extend()
 
 local DIALOGUES_PATH = "Assets/Dialogues/dialogues.csv"
@@ -60,6 +63,7 @@ function VisualNovelScene:new()
 
     -- Dialogue library
     self.library = DialogueLibrary.load(DIALOGUES_PATH)
+    self.library:check()
 
     -- Input systems
     self.dialogueInput = DialogueInputSystem()
@@ -105,6 +109,8 @@ function VisualNovelScene:new()
     -- Draw order: background first, toasts last.
     self:addSystem(PortraitRenderSystem())
     self:addSystem(DialogueRenderSystem())
+    self.choiceSystem = ChoiceSystem()
+    self:addSystem(self.choiceSystem)
     self:addSystem(CardRenderSystem())
     self:addSystem(ToastSystem())
 
@@ -133,19 +139,7 @@ function VisualNovelScene:new()
     self.registry:createEntity(
         "Character Portrait",
         {
-            [CharacterPortrait] = CharacterPortrait.new("Alice"),
-
-            -- Bottom right, resting on top of the dialogue box.
-            [Layout] = Layout.new({
-                anchorX = 1,
-                anchorY = 1,
-                offsetX = -80,
-                offsetY = -260,
-                width = 350,
-                height = 420,
-
-                inColumn = true
-            })
+            [CharacterPortrait] = CharacterPortrait.new("Alice")
         }
     )
 
@@ -229,7 +223,8 @@ function VisualNovelScene:new()
                 marginX = 40
             }),
 
-            [DialogueState] = DialogueState.new(40)
+            [DialogueState] = DialogueState.new(40),
+            [ChoiceMenu] = ChoiceMenu.new()
         }
     )
 
@@ -244,6 +239,10 @@ function VisualNovelScene:new()
         self:onDialogueLine(line, info)
     end
 
+    self.dialogueState.resolveConversation = function(conversationId)
+        return self.library:get(conversationId)
+    end
+
     self.dialogueState:start(
         self.library:require(STORY_CONVERSATION)
     )
@@ -254,14 +253,9 @@ end
 -- DIALOGUE LINE EVENTS
 -- =========================================================
 
--- CSV columns used here (all optional):
---   scene      background id (see src/Data/Scenes.lua)
---   give_card  card id (see src/Data/Cards.lua), obtained when the line shows
 function VisualNovelScene:onDialogueLine(line, info)
     local sceneId = line.scene
 
-    -- Coming back from a card dialogue: restore the background that
-    -- the interrupted conversation had, since the card may have changed it.
     if info.resumed and (sceneId == nil or sceneId == "") then
         for i = info.index, 1, -1 do
             local previous = info.lines[i].scene
@@ -271,6 +265,17 @@ function VisualNovelScene:onDialogueLine(line, info)
                 break
             end
         end
+
+        -- A branch reached through a choice may not repeat the scene.
+        if sceneId == nil or sceneId == "" then
+            sceneId = self.storyScene
+        end
+    end
+
+    -- Remember the background of the main story (not of card dialogues).
+    if not info.resumed and sceneId and sceneId ~= ""
+        and not self.dialogueState:isInterrupted() then
+        self.storyScene = sceneId
     end
 
     if sceneId and sceneId ~= "" then
@@ -503,6 +508,11 @@ function VisualNovelScene:keypressed(key)
         return true
     end
 
+    -- A pending decision takes every key (1-9, up/down, enter).
+    if self.choiceSystem:keypressed(self.registry, key) then
+        return true
+    end
+
     -- M opens/closes the map.
     if key == "m" then
         if self.mapOpen then
@@ -548,6 +558,7 @@ function VisualNovelScene:mousemoved(x, y, dx, dy)
         return
     end
 
+    self.choiceSystem:mousemoved(self.registry, x, y)
     self.uiInputSystem:mousemoved(self.registry, x, y, "hud")
 end
 
@@ -584,6 +595,11 @@ function VisualNovelScene:mousepressed(x, y, button)
         end
 
         -- Consume all clicks while the map is open.
+        return true
+    end
+
+    -- A pending decision takes every click.
+    if self.choiceSystem:mousepressed(self.registry, x, y, button) then
         return true
     end
 

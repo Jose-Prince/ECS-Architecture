@@ -3,6 +3,8 @@ local Csv = require("src.Dialogue.Csv")
 
 local REQUIRED_COLUMNS = {"conversation", "speaker", "text"}
 
+local Choices = require("src.Dialogue.Choices")
+
 local DialogueLibrary = Object:extend()
 
 local function trim(value)
@@ -143,6 +145,29 @@ function DialogueLibrary:require(id)
     end
 
     return lines
+end
+
+function DialogueLibrary:check()
+    local function missing(line, id, target, what)
+        if target ~= "" and not self.conversations[target] then
+            print(("Aviso: fila %d ('%s'): %s a '%s', que no existe")
+                :format(line.row or 0, id, what, target))
+        end
+    end
+
+    for _, id in ipairs(self.order) do
+        for _, line in ipairs(self.conversations[id]) do
+            missing(line, id, line.jump or "", "salta (jump)")
+
+            local options = Choices.get(line)
+
+            if options then
+                for _, option in ipairs(options) do
+                    missing(line, id, option.target, "la opción '" .. option.text .. "' va")
+                end
+            end
+        end
+    end
 end
 
 function DialogueLibrary:ids()

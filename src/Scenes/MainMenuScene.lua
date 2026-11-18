@@ -18,8 +18,8 @@ local MainMenuScene = Scene:extend()
 function MainMenuScene:new()
     MainMenuScene.super.new(self, 3, "Main Menu")
 
-    self.title = "Your Story"
-    self.subtitle = "A visual novel"
+    self.title = "The time I received a love letter that didn’t say who wrote it, so I had to figure out who the author was."
+    self.subtitle = "- THE GAME -"
 
     -- LayoutSystem must be first (it positions the buttons).
     self:addSystem(LayoutSystem())
