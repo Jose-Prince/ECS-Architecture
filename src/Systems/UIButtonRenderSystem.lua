@@ -8,9 +8,10 @@ function UIButtonRenderSystem.new()
     return setmetatable({}, UIButtonRenderSystem)
 end
 
-function UIButtonRenderSystem:draw(registry)
+-- group (optional): only draw the buttons of that group.
+function UIButtonRenderSystem:draw(registry, group)
     for entity, button in registry:query(UIButton) do
-        if not button.enabled then
+        if not button.enabled or (group and button.group ~= group) then
             goto continue
         end
 

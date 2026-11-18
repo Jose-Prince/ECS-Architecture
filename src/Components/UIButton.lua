@@ -10,6 +10,10 @@ function UIButton.new(config)
 
     self.text = config.text or "Button"
 
+    -- Optional: lets a scene draw/click only some of its buttons
+    -- (e.g. "pause", "hud", "map").
+    self.group = config.group
+
     self.x = config.x or 0
     self.y = config.y or 0
     self.width = config.width or 200

@@ -23,4 +23,9 @@ card_Library,You,"The library is always so peaceful.",library,,
 card_Library,You,"Maybe I should spend more time here.",,,Friendship
 card_Friendship,You,"Having friends makes school much more enjoyable.",sport_field,,
 card_Love,You,"I wonder what it feels like to fall in love.",rooftop,,
-card_Love,You,"Maybe I'll find out someday."
+card_Love,You,"Maybe I'll find out someday.",,,
+# --- Place dialogues (id = location_<scene id>), played when you travel there from the map
+location_library,You,"Quiet as always. Maybe someone left a clue between the shelves.",,,
+location_rooftop,Hiroko,"Oh, you found me up here.",,happy,
+location_rooftop,Hiroko,"I come here when I want to think.",,neutral,
+location_lockers,You,"Somebody's locker was left open...",,surprise,

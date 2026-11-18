@@ -8,8 +8,13 @@ function UIButtonInputSystem.new()
     return setmetatable({}, UIButtonInputSystem)
 end
 
-function UIButtonInputSystem:mousemoved(registry, x, y)
+-- group (optional): only handle the buttons of that group.
+function UIButtonInputSystem:mousemoved(registry, x, y, group)
     for entity, button in registry:query(UIButton) do
+        if group and button.group ~= group then
+            goto continue
+        end
+
         if not button.enabled then
             button.hovered = false
             goto continue
@@ -21,13 +26,13 @@ function UIButtonInputSystem:mousemoved(registry, x, y)
     end
 end
 
-function UIButtonInputSystem:mousepressed(registry, x, y, mouseButton)
+function UIButtonInputSystem:mousepressed(registry, x, y, mouseButton, group)
     if mouseButton ~= 1 then
         return false
     end
 
     for entity, button in registry:query(UIButton) do
-        if not button.enabled then
+        if not button.enabled or (group and button.group ~= group) then
             goto continue
         end
 
