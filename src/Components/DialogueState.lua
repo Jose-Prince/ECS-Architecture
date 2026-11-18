@@ -193,6 +193,9 @@ function DialogueState:goNext()
     if frame.index < #frame.lines then
         frame.index = frame.index + 1
         self:showLine(false, false)
+    elseif self.variables.game_over then
+        self.ended = true
+        self.finished = true
     elseif #self.stack > 1 then
         table.remove(self.stack)
         self:showLine(true, true)

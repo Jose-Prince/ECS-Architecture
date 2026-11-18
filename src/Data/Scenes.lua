@@ -4,5 +4,6 @@ return {
     { id = "library",     name = "Library",     background = "Assets/Backgrounds/library_pixel_art.png",     filter = "nearest" },
     { id = "school",      name = "School Gate", background = "Assets/Backgrounds/pixel_art_large.png",       filter = "nearest" },
     { id = "rooftop",     name = "Rooftop",     background = "Assets/Backgrounds/rooftop_pixel_art.png",     filter = "nearest" },
-    { id = "sport_field", name = "Sport Field", background = "Assets/Backgrounds/sport_field_pixel-art.png", filter = "nearest" }
+    { id = "sport_field", name = "Sport Field", background = "Assets/Backgrounds/sport_field_pixel-art.png", filter = "nearest" },
+    { id = "date", name = "Date", background = "Assets/Backgrounds/coffee_shop_pixel-art.png", filter = "nearest" }
 }

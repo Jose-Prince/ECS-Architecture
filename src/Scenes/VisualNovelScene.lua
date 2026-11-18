@@ -254,6 +254,10 @@ end
 -- =========================================================
 
 function VisualNovelScene:onDialogueLine(line, info)
+    if info.resumed and self.dialogueState:get("exploring", false) then
+        return
+    end
+
     local sceneId = line.scene
 
     if info.resumed and (sceneId == nil or sceneId == "") then
@@ -379,6 +383,11 @@ function VisualNovelScene:update(dt)
     -- Do not update gameplay while paused.
     if self.isPaused then
         return
+    end
+
+    if self.dialogueState.finished then
+        local MainMenuScene = require("src.Scenes.MainMenuScene")
+        SceneManager:setScene(MainMenuScene())
     end
 
     -- Execute the registered ECS systems.
@@ -782,7 +791,7 @@ end
 function VisualNovelScene:travelTo(sceneId)
     self:closeMap()
 
-    if sceneId == self.background.sceneId then
+    if sceneId == self.background.sceneId and not self.dialogueState:get("exploring", false) then
         return
     end
 
