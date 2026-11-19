@@ -1,40 +1,41 @@
+
 -- src/Data/Cards.lua
--- Cada carta es una pista que se obtiene al escuchar algo (give_card en dialogues.csv).
--- Al hacer clic en ella se reproduce la conversación "card_<id>" con la nota correspondiente.
--- Los iconos son provisionales: cámbialos por los tuyos.
+-- Each card is a clue obtained by listening to something (give_card in dialogues.csv).
+-- Clicking on it plays the "card_<id>" conversation with the corresponding note.
+-- The icons are placeholders: replace them with your own.
 local function note(id, name, icon)
     return { id = id, name = name, icon = "Assets/Icons/" .. icon .. ".png" }
 end
 
 return {
-    -- Lo que encuentra el protagonista
-    note("Carta",        "La carta",       "love"),
-    note("Letra",        "La letra",       "school"),
-    note("Casillero",    "Casillero",      "school"),
+    -- What the protagonist finds
+    note("Carta",        "The Letter",       "love"),
+    note("Letra",        "The Handwriting",        "love"),
+    note("Casillero",    "Locker",           "school"),
 
-    -- Hiroko (azotea)
-    note("HirokoCarta",  "Hiroko: carta",  "friendship"),
-    note("HirokoAyer",   "Hiroko: ayer",   "friendship"),
-    note("HirokoYamada", "Hiroko: Yamada", "friendship"),
+    -- Hiroko (rooftop)
+    note("HirokoCarta",  "Hiroko: Letter",   "friendship"),
+    note("HirokoAyer",   "Hiroko: Yesterday","friendship"),
+    note("HirokoYamada", "Hiroko: Yamada",   "friendship"),
 
-    -- Makoto (campo deportivo)
-    note("MakotoAyer",   "Makoto: ayer",   "friendship"),
-    note("MakotoYamada", "Makoto: Yamada", "friendship"),
-    note("MakotoOtras",  "Makoto: otras",  "friendship"),
+    -- Makoto (sports field)
+    note("MakotoAyer",   "Makoto: Yesterday","friendship"),
+    note("MakotoYamada", "Makoto: Yamada",   "friendship"),
+    note("MakotoOtras",  "Makoto: Others",   "friendship"),
 
-    -- Sakura (entrada)
-    note("SakuraCarta",  "Sakura: carta",  "friendship"),
-    note("SakuraAyer",   "Sakura: ayer",   "friendship"),
-    note("SakuraYamada", "Sakura: Yamada", "friendship"),
-    note("SakuraOtras",  "Sakura: otras",  "friendship"),
+    -- Sakura (entrance)
+    note("SakuraCarta",  "Sakura: Letter",   "friendship"),
+    note("SakuraAyer",   "Sakura: Yesterday","friendship"),
+    note("SakuraYamada", "Sakura: Yamada",   "friendship"),
+    note("SakuraOtras",  "Sakura: Others",   "friendship"),
 
-    -- Naofumi (biblioteca)
-    note("NaofumiCarta",  "Naofumi: carta",  "library"),
-    note("NaofumiAyer",   "Naofumi: ayer",   "library"),
-    note("NaofumiYamada", "Naofumi: Yamada", "library"),
+    -- Naofumi (library)
+    note("NaofumiCarta",  "Naofumi: Letter",   "book"),
+    note("NaofumiAyer",   "Naofumi: Yesterday","book"),
+    note("NaofumiYamada", "Naofumi: Yamada",   "book"),
 
-    -- Yamada (salón)
-    note("YamadaCarta",  "Yamada: carta",  "school"),
-    note("YamadaAyer",   "Yamada: ayer",   "school"),
-    note("YamadaHiroko", "Yamada: Hiroko", "school"),
+    -- Yamada (classroom)
+    note("YamadaCarta",  "Yamada: Letter",   "school"),
+    note("YamadaAyer",   "Yamada: Yesterday","school"),
+    note("YamadaHiroko", "Yamada: Hiroko",   "school"),
 }
