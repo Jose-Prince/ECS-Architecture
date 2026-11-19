@@ -356,8 +356,8 @@ function VisualNovelScene:giveCard(cardId, silent)
     local card = Card.new(
         data.name,
         data.icon,
-        100,
-        90,
+        nil,
+        nil,
         data.dialogue or ("card_" .. data.id)
     )
 
@@ -383,6 +383,19 @@ function VisualNovelScene:update(dt)
     -- Do not update gameplay while paused.
     if self.isPaused then
         return
+    end
+
+    -- The map unlocks when the story sets exploring=true (end of the talk
+    -- with Makoto and Sakura in the classroom).
+    if not self.mapUnlocked and self:isMapUnlocked() then
+        self.mapUnlocked = true
+        self.mapButton.enabled = true
+        self:showToast("Map unlocked! Press M to travel")
+    end
+
+    -- Cards can't be picked while a decision is pending.
+    if self.choiceSystem:isActive(self.registry) then
+        self.cardInput:clearHover(self.registry)
     end
 
     if self.dialogueState.finished then
@@ -569,6 +582,14 @@ function VisualNovelScene:mousemoved(x, y, dx, dy)
 
     self.choiceSystem:mousemoved(self.registry, x, y)
     self.uiInputSystem:mousemoved(self.registry, x, y, "hud")
+
+    -- Cards lift when the mouse is over them.
+    self.cardInput:mousemoved(
+        self.registry,
+        x,
+        y,
+        not self.choiceSystem:isActive(self.registry)
+    )
 end
 
 
@@ -686,15 +707,18 @@ end
 -- =========================================================
 
 function VisualNovelScene:createMap()
-    -- Map button, top right.
-    self.registry:createEntity(
+    -- Map button, top right. Hidden until the map is unlocked
+    -- (see isMapUnlocked).
+    self.mapUnlocked = false
+
+    local mapButtonEntity = self.registry:createEntity(
         "Map Button",
         {
             [UIButton] = UIButton.new({
                 text = "MAP (M)",
                 fontSize = 18,
                 group = "hud",
-
+                enabled = false,
                 onClick = function()
                     self:openMap()
                 end
@@ -710,6 +734,8 @@ function VisualNovelScene:createMap()
             })
         }
     )
+
+    self.mapButton = self.registry:getComponent(mapButtonEntity, UIButton)
 
     -- One entity per visitable place.
     local count = 0
@@ -761,15 +787,24 @@ function VisualNovelScene:createMap()
     )
 end
 
+-- The map is locked until the story sets exploring=true.
+function VisualNovelScene:isMapUnlocked()
+    return self.dialogueState ~= nil
+        and self.dialogueState:get("exploring", false) == true
+end
+
 function VisualNovelScene:openMap()
-    -- Places are reached between conversations: card and place dialogues
-    -- sit on top of the story and can't be stacked any further.
+    if not self:isMapUnlocked() then
+        return false
+    end
+
     if self.dialogueState:isInterrupted() then
         self:showToast("Finish this conversation first")
         return false
     end
 
     self.mapOpen = true
+    self.cardInput:clearHover(self.registry)
 
     for entity, location in self.registry:query(MapLocation) do
         location.hovered = false
@@ -790,6 +825,13 @@ end
 -- ("location_<id>" in dialogues.csv), if there is one.
 function VisualNovelScene:travelTo(sceneId)
     self:closeMap()
+
+    -- Some places (the date) are only reached through the story.
+    local place = self.sceneDefinitions[sceneId]
+
+    if place and place.visitable == false then
+        return
+    end
 
     if sceneId == self.background.sceneId and not self.dialogueState:get("exploring", false) then
         return
@@ -903,6 +945,7 @@ function VisualNovelScene:pauseGame()
     end
 
     self.isPaused = true
+    self.cardInput:clearHover(self.registry)
 end
 
 

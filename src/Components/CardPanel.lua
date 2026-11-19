@@ -1,3 +1,5 @@
+local Card = require("src.Components.Card")
+
 local CardPanel = {}
 
 CardPanel.__index = CardPanel
@@ -15,11 +17,11 @@ function CardPanel.new(x, y, width, height)
 
         -- Design units.
         baseGap = 12,
-        baseCardWidth = 100,
+        baseCardWidth = Card.WIDTH,
 
         -- Pixels (resolved).
         gap = 12,
-        cardWidth = 100,
+        cardWidth = Card.WIDTH,
 
         cardCount = 0
     }, CardPanel)
@@ -39,8 +41,16 @@ function CardPanel:getMaxScroll()
     return math.max(0, self:getContentWidth() - self.width)
 end
 
+-- Rectangle (pixels) of the card that is in position `index` (0 = first).
+-- Used by the render and input systems so both agree on where cards are.
+function CardPanel:cardRect(card, index)
+    local x = self.x + index * (card.width + self.gap) - self.scrollX
+    local y = self.y + (self.height - card.height) / 2
+
+    return x, y, card.width, card.height
+end
+
 function CardPanel.sortedCards(registry)
-    local Card = require("src.Components.Card")
     local list = {}
 
     for entity, card in registry:query(Card) do

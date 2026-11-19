@@ -3,6 +3,10 @@ local Card = {}
 Card.__index = Card
 Card.__name = "Card"
 
+-- Playing-card proportions (about 5:7), in design units.
+Card.WIDTH = 64
+Card.HEIGHT = 90
+
 function Card.new(name, iconPath, width, height, dialogueId)
     local icon = nil
 
@@ -17,8 +21,8 @@ function Card.new(name, iconPath, width, height, dialogueId)
         end
     end
 
-    local baseWidth = width or 100
-    local baseHeight = height or 90
+    local baseWidth = width or Card.WIDTH
+    local baseHeight = height or Card.HEIGHT
 
     return setmetatable({
         id = name or "Unknown",
@@ -28,15 +32,20 @@ function Card.new(name, iconPath, width, height, dialogueId)
         -- Design units.
         baseWidth = baseWidth,
         baseHeight = baseHeight,
-        baseIconSize = 48,
+        baseIconSize = 40,
 
         -- Pixels (resolved).
         width = baseWidth,
         height = baseHeight,
-        iconSize = 48,
+        iconSize = 40,
 
         dialogueId = dialogueId or "",
-        enabled = true
+        enabled = true,
+
+        -- Mouse over the card (CardInputSystem) and how far the hover
+        -- animation has gone, 0 to 1 (CardRenderSystem).
+        hovered = false,
+        hoverAmount = 0
     }, Card)
 end
 
